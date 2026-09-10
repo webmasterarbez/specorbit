@@ -55,6 +55,11 @@ The update command SHALL refresh existing slash command files for configured ada
 - **AND** ensure templates include instructions for the relevant workflow stage
 - **AND** ensure the archive command includes `$ARGUMENTS` placeholder in frontmatter for accepting change ID arguments
 
+#### Scenario: Legacy OpenCode command path cleanup
+- **WHEN** a project still has command files under the legacy singular path `.opencode/command/` (for example `orbit-*.md` or `specorbit-*.md`)
+- **THEN** `specorbit init` or legacy cleanup SHALL remove those files and generate replacements under `.opencode/commands/`
+- **AND** `specorbit update` SHALL NOT refresh files that remain only under `.opencode/command/`
+
 #### Scenario: Updating slash commands for Windsurf
 - **WHEN** `.windsurf/workflows/` contains `specorbit-proposal.md`, `specorbit-apply.md`, and `specorbit-archive.md`
 - **THEN** refresh each file using shared templates wrapped in SpecOrbit markers
@@ -66,6 +71,11 @@ The update command SHALL refresh existing slash command files for configured ada
 - **THEN** refresh each file using shared templates wrapped in SpecOrbit markers
 - **AND** ensure templates include instructions for the relevant workflow stage
 - **AND** skip creating missing files (the update command only refreshes what already exists)
+
+#### Scenario: Updating slash commands for Codex
+- **GIVEN** RETIRED — Codex custom prompts are legacy cleanup candidates, not refreshed files (see "Codex prompt files are not refreshed" below)
+- **WHEN** a user runs `specorbit update`
+- **THEN** Codex prompt files SHALL NOT be refreshed; they SHALL be treated as legacy cleanup candidates once replacement skills exist
 
 #### Scenario: Codex prompt files are not refreshed
 - **GIVEN** the global Codex prompt directory contains SpecOrbit-managed Codex prompt files

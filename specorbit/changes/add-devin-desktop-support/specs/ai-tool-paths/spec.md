@@ -105,6 +105,12 @@ The `AI_TOOLS` array SHALL include `skillsDir` for tools that support the Agent 
 - **THEN** no `AI_TOOLS` entry SHALL exist for it
 - **AND** the id SHALL resolve to `devin`, whose `skillsDir` is `.devin` and whose `detectionPaths` still include the legacy `.windsurf`
 
+#### Scenario: Legacy Windsurf tool ID
+
+- **WHEN** initializing with `specorbit init --tools windsurf`
+- **THEN** the `windsurf` alias SHALL resolve to `devin`
+- **AND** when skill delivery is enabled, skills SHALL be generated under `.devin/skills/`, not `.windsurf/skills/`
+
 #### Scenario: Kimi Code paths defined
 
 - **WHEN** looking up the `kimi` tool
