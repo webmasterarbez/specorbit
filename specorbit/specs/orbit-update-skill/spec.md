@@ -1,7 +1,7 @@
 # orbit-update-skill Specification
 
 ## Purpose
-TBD - created by archiving change add-update-workflow. Update Purpose after archive.
+The `/orbit:update` skill revises a change's existing planning artifacts in place — resolving artifacts from CLI status, keeping them coherent, and applying revisions incrementally only after user confirmation — without advancing the build frontier or touching implementation code.
 
 ## Requirements
 

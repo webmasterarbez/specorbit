@@ -1,7 +1,7 @@
 # orbit-bulk-archive-skill Specification
 
 ## Purpose
-TBD - created by archiving change extend-config-injection-to-apply-archive. Update Purpose after archive.
+The `/orbit:bulk-archive` skill loads current archive operation inputs once per batch and carries each change's artifact rules into its spec sync, without changing its existing batch orchestration.
 
 ## Requirements
 

@@ -1,7 +1,7 @@
 # graceful-status-empty Specification
 
 ## Purpose
-TBD - created by archiving change graceful-status-no-changes. Update Purpose after archive.
+`specorbit status` with no changes present prints a friendly message and exits 0 instead of throwing, while all other validation error paths stay unchanged.
 
 ## Requirements
 

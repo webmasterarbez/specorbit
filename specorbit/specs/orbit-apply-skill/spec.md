@@ -1,7 +1,7 @@
 # orbit-apply-skill Specification
 
 ## Purpose
-TBD - created by archiving change extend-config-injection-to-apply-archive. Update Purpose after archive.
+The `/orbit:apply` skill consumes current project context and apply operation guidance from `specorbit instructions apply` at runtime while keeping its existing state-driven workflow behavior unchanged.
 
 ## Requirements
 

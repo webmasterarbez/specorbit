@@ -1,7 +1,7 @@
 # cli-archive-instructions Specification
 
 ## Purpose
-TBD - created by archiving change extend-config-injection-to-apply-archive. Update Purpose after archive.
+`specorbit instructions archive --change <name>` is a read-only surface that returns the current archive operation inputs (project context and archive operation guidance) for a valid change in the selected root, without performing any archive work.
 
 ## Requirements
 

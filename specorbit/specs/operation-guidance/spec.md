@@ -1,7 +1,7 @@
 # operation-guidance Specification
 
 ## Purpose
-TBD - created by archiving change extend-config-injection-to-apply-archive. Update Purpose after archive.
+Projects can configure additive, non-enforceable advice for supported operations under `operations.<operation>.guidance`, loaded from the selected-root config at execution time and preserved verbatim when returned to the operation.
 
 ## Requirements
 
