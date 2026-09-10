@@ -11,7 +11,7 @@ export const MAX_WHY_SECTION_LENGTH = 1000;
 export const MAX_REQUIREMENT_TEXT_LENGTH = 500;
 export const MAX_DELTAS_PER_CHANGE = 10;
 
-// The Purpose `openspec archive` writes into a main spec it creates when the
+// The Purpose `specorbit archive` writes into a main spec it creates when the
 // delta introduced the capability without a usable `## Purpose`. Named here, and
 // composed from these two halves at the write site, so validation recognises the
 // placeholder through the same definition that produces it: a second, hand-copied
@@ -36,11 +36,11 @@ export const VALIDATION_MESSAGES = {
   CHANGE_WHAT_EMPTY: 'What Changes section cannot be empty',
   CHANGE_NO_DELTAS: 'Change must have at least one delta',
   CHANGE_SKIP_SPECS_CONFLICT:
-    'skip_specs is set in .openspec.yaml but spec files exist under specs/. Remove skip_specs or delete the delta spec files',
+    'skip_specs is set in .specorbit.yaml but spec files exist under specs/. Remove skip_specs or delete the delta spec files',
   CHANGE_SKIP_SPECS_ACCEPTED:
-    'skip_specs is set in .openspec.yaml: change declares no spec-level behavior changes, zero deltas accepted',
+    'skip_specs is set in .specorbit.yaml: change declares no spec-level behavior changes, zero deltas accepted',
   CHANGE_SKIP_SPECS_INVALID_METADATA:
-    'skip_specs is set but .openspec.yaml is not valid change metadata, so the marker is not honored. Fix the metadata',
+    'skip_specs is set but .specorbit.yaml is not valid change metadata, so the marker is not honored. Fix the metadata',
   CHANGE_TOO_MANY_DELTAS: `Consider splitting changes with more than ${MAX_DELTAS_PER_CHANGE} deltas`,
   DELTA_SPEC_EMPTY: 'Spec name cannot be empty',
   DELTA_DESCRIPTION_EMPTY: 'Delta description cannot be empty',
@@ -48,7 +48,7 @@ export const VALIDATION_MESSAGES = {
   // Warnings
   PURPOSE_TOO_BRIEF: `Purpose section is too brief (less than ${MIN_PURPOSE_LENGTH} characters)`,
   PURPOSE_IS_PLACEHOLDER:
-    'Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` ' +
+    'Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `specorbit archive` ' +
     'writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this ' +
     'capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the ' +
     'capability is created, so it cannot replace this one.',
@@ -58,7 +58,7 @@ export const VALIDATION_MESSAGES = {
   
   // Guidance snippets (appended to primary messages for remediation)
   GUIDE_NO_DELTAS:
-    'No deltas found. Ensure your change has a specs/ directory with capability folders (e.g. specs/http-server/spec.md) containing .md files that use delta headers (## ADDED/MODIFIED/REMOVED/RENAMED Requirements) and that each requirement includes at least one "#### Scenario:" block. If this change intentionally modifies no specs (pure refactor, tooling, docs), set "skip_specs: true" in the change\'s .openspec.yaml instead. Tip: run "openspec change show <change-id> --json --deltas-only" to inspect parsed deltas.',
+    'No deltas found. Ensure your change has a specs/ directory with capability folders (e.g. specs/http-server/spec.md) containing .md files that use delta headers (## ADDED/MODIFIED/REMOVED/RENAMED Requirements) and that each requirement includes at least one "#### Scenario:" block. If this change intentionally modifies no specs (pure refactor, tooling, docs), set "skip_specs: true" in the change\'s .specorbit.yaml instead. Tip: run "specorbit change show <change-id> --json --deltas-only" to inspect parsed deltas.',
   GUIDE_MISSING_SPEC_SECTIONS:
     'Missing required sections. Expected headers: "## Purpose" and "## Requirements". Example:\n## Purpose\n[brief purpose]\n\n## Requirements\n### Requirement: Clear requirement statement\nUsers SHALL ...\n\n#### Scenario: Descriptive name\n- **WHEN** ...\n- **THEN** ...',
   GUIDE_MISSING_CHANGE_SECTIONS:

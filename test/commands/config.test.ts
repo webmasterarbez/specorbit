@@ -8,7 +8,7 @@ async function runConfigCommand(args: string[]): Promise<void> {
   const { registerConfigCommand } = await import('../../src/commands/config.js');
   const program = new Command();
   registerConfigCommand(program);
-  await program.parseAsync(['node', 'openspec', 'config', ...args]);
+  await program.parseAsync(['node', 'specorbit', 'config', ...args]);
 }
 
 describe('config command integration', () => {
@@ -20,7 +20,7 @@ describe('config command integration', () => {
 
   beforeEach(() => {
     // Create unique temp directory for each test
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openspec-config-test-'));
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'specorbit-config-test-'));
 
     // Save original env and set XDG_CONFIG_HOME
     originalEnv = { ...process.env };
@@ -49,7 +49,7 @@ describe('config command integration', () => {
   it('should use XDG_CONFIG_HOME for config path', async () => {
     const { getGlobalConfigPath } = await import('../../src/core/global-config.js');
     const configPath = getGlobalConfigPath();
-    expect(configPath).toBe(path.join(tempDir, 'openspec', 'config.json'));
+    expect(configPath).toBe(path.join(tempDir, 'specorbit', 'config.json'));
   });
 
   it('should save and load config correctly', async () => {
@@ -184,7 +184,7 @@ describe('config command shell completion registry', () => {
 
     const configCmd = COMMAND_REGISTRY.find((cmd) => cmd.name === 'config');
     expect(configCmd).toBeDefined();
-    expect(configCmd?.description).toBe('View and modify global OpenSpec configuration');
+    expect(configCmd?.description).toBe('View and modify global SpecOrbit configuration');
   });
 
   it('should have all config subcommands in registry', async () => {
@@ -307,7 +307,7 @@ describe('config profile command', () => {
   let originalEnv: NodeJS.ProcessEnv;
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openspec-profile-test-'));
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'specorbit-profile-test-'));
     originalEnv = { ...process.env };
     process.env.XDG_CONFIG_HOME = tempDir;
   });

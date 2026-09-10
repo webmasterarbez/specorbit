@@ -1,4 +1,10 @@
-# @fission-ai/openspec
+# SpecOrbit
+
+> **Fork note:** SpecOrbit is a fork of [OpenSpec](https://github.com/Fission-AI/OpenSpec)
+> by Fission-AI, rebranded and extended as an independent project under the same MIT
+> license. The history below documents the upstream `@fission-ai/openspec` releases this
+> fork is built on (through v1.13.0); it is preserved as attribution and audit trail.
+> SpecOrbit-specific releases appear below this note from v1.0.0 onward.
 
 ## 1.13.0
 

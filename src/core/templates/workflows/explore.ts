@@ -11,7 +11,7 @@ const PLANNING_GUIDANCE = `## Planning a Change
 
 When the user is planning a change, guide them toward shared understanding with focused discovery questions. For open-ended discussion, follow the conversation without imposing an interview or a required output.
 
-Before asking a factual question, follow the context discovery below and inspect relevant OpenSpec artifacts, source, tests, docs, and configuration. Do not ask the user to repeat facts you can verify. Summarize relevant findings without reproducing private context or rules. If evidence is missing, conflicting, or inaccessible, state that limitation and ask only for the clarification needed to proceed.
+Before asking a factual question, follow the context discovery below and inspect relevant SpecOrbit artifacts, source, tests, docs, and configuration. Do not ask the user to repeat facts you can verify. Summarize relevant findings without reproducing private context or rules. If evidence is missing, conflicting, or inaccessible, state that limitation and ask only for the clarification needed to proceed.
 
 - **Follow dependencies** - Resolve the next blocking decision before its dependent details. For example, clarify the user's outcome and scope before choosing an API or data model. Revisit downstream assumptions when an earlier answer changes. Skip branches that do not matter to this goal.
 - **Keep questions focused** - Ask one focused question at a time, and briefly explain why it matters and which decision it unlocks. Batch questions only if the user asks for a batch; keep them small and group related decisions.
@@ -31,11 +31,11 @@ adding a service to operate; shared state would need a separate sync design.
 
 export function getExploreSkillTemplate(): SkillTemplate {
   return {
-    name: 'openspec-explore',
+    name: 'specorbit-explore',
     description: 'Enter explore mode - a thinking partner for exploring ideas, investigating problems, and clarifying requirements. Use when the user wants to think through something before or during a change.',
     instructions: `Enter explore mode. Think deeply. Visualize freely. Follow the conversation wherever it goes.
 
-**IMPORTANT: Explore mode is for thinking, not implementing.** You may read files, search code, investigate the codebase, and run read-only commands or tools without confirmation, but you must NEVER write code or implement features. If the user asks you to implement something, remind them to exit explore mode first and create a change proposal. You MAY create or update OpenSpec change artifacts (proposals, designs, specs) within a confirmed scope—that's capturing thinking, not implementing. Answering design or clarifying questions is never consent to write. Before the first write-capable action, name the artifacts or files you would change and what you would do, ask a direct yes/no question, and wait for the user's confirmation in a separate message. Confirmation covers only the scope you described; ask again before expanding it. For a new change, scaffold it first as described below.
+**IMPORTANT: Explore mode is for thinking, not implementing.** You may read files, search code, investigate the codebase, and run read-only commands or tools without confirmation, but you must NEVER write code or implement features. If the user asks you to implement something, remind them to exit explore mode first and create a change proposal. You MAY create or update SpecOrbit change artifacts (proposals, designs, specs) within a confirmed scope—that's capturing thinking, not implementing. Answering design or clarifying questions is never consent to write. Before the first write-capable action, name the artifacts or files you would change and what you would do, ask a direct yes/no question, and wait for the user's confirmation in a separate message. Confirmation covers only the scope you described; ask again before expanding it. For a new change, scaffold it first as described below.
 
 **This is a stance, not a workflow.** There are no fixed steps, no required sequence, no mandatory outputs. You're a thinking partner helping the user explore.
 
@@ -108,15 +108,15 @@ Unicode diagram glyphs can render at different widths across terminals, fonts, a
 
 ---
 
-## OpenSpec Awareness
+## SpecOrbit Awareness
 
-You have full context of the OpenSpec system. Use it naturally, don't force it.
+You have full context of the SpecOrbit system. Use it naturally, don't force it.
 
 ### Check for context
 
 At the start, quickly check what exists:
 \`\`\`bash
-openspec list --json
+specorbit list --json
 \`\`\`
 
 This tells you:
@@ -126,13 +126,13 @@ This tells you:
 
 That is the *change* list - work in flight. It does not include the project's durable capabilities, so list those too:
 \`\`\`bash
-openspec list --specs
+specorbit list --specs
 \`\`\`
-Add \`--json\` for ids and requirement counts, and append \`--store "<id>"\` only for a registered standalone store. This is the inventory of what the project already claims to do, and \`openspec list\` on its own never shows it. To look at one, run \`openspec show "<spec-id>" --type spec --json --no-scenarios\` (same \`--store\` rule) - it returns that capability's purpose and requirement texts without pulling the whole spec file into context, and \`--type spec\` stops a change of the same name from making it ambiguous.
+Add \`--json\` for ids and requirement counts, and append \`--store "<id>"\` only for a registered standalone store. This is the inventory of what the project already claims to do, and \`specorbit list\` on its own never shows it. To look at one, run \`specorbit show "<spec-id>" --type spec --json --no-scenarios\` (same \`--store\` rule) - it returns that capability's purpose and requirement texts without pulling the whole spec file into context, and \`--type spec\` stops a change of the same name from making it ambiguous.
 
-The filtered read is only an overview. Before deciding what is already covered or what should change, read each relevant spec in full, including scenarios, with \`openspec show "<spec-id>" --type spec\` (same \`--store\` rule).
+The filtered read is only an overview. Before deciding what is already covered or what should change, read each relevant spec in full, including scenarios, with \`specorbit show "<spec-id>" --type spec\` (same \`--store\` rule).
 
-Then read the project's own context from the resolved root - \`<root.path>/openspec/config.yaml\` (or \`config.yml\`). Use the \`root.path\` returned above, and skip this if neither file exists:
+Then read the project's own context from the resolved root - \`<root.path>/specorbit/config.yaml\` (or \`config.yml\`). Use the \`root.path\` returned above, and skip this if neither file exists:
 - \`context\`: project background - tech stack, conventions, constraints
 - \`rules\`: keyed by artifact id - the entries for an artifact apply only when you write that artifact
 
@@ -147,10 +147,10 @@ Think freely. When insights crystallize, you might offer:
 
 If the user asks you to capture the exploration as a new change, transition seamlessly into the requested capture:
 
-1. Run \`openspec new change "<name>"\` (with \`--store <id>\` when applicable) before creating any artifacts. Never create a new change directory under \`openspec/changes/\` by hand; the CLI scaffold creates required metadata such as \`.openspec.yaml\`. Keep the selected \`--store <id>\` on every applicable follow-up \`status\` and \`instructions\` command.
-2. Run \`openspec status --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store), then process the requested artifacts in dependency order. For each requested artifact that is \`ready\`, run \`openspec instructions "<artifact-id>" --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store). Before creating a requested artifact, evaluate any condition in its own \`instruction\` against the explored change; record a deliberate skip instead when the condition does not apply. If a requested artifact is blocked by a direct prerequisite the user did not request, run \`openspec instructions "<prerequisite-id>" --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store) for that prerequisite whether it is \`ready\` or \`blocked\`. If its own \`instruction\` states a condition, evaluate that condition against the explored change and record a deliberate skip only when the condition does not apply. If the condition applies, or the prerequisite is not conditional, treat it as a normal prerequisite and ask before expanding the capture. Do not create an unrequested prerequisite unless the user approves.
+1. Run \`specorbit new change "<name>"\` (with \`--store <id>\` when applicable) before creating any artifacts. Never create a new change directory under \`specorbit/changes/\` by hand; the CLI scaffold creates required metadata such as \`.specorbit.yaml\`. Keep the selected \`--store <id>\` on every applicable follow-up \`status\` and \`instructions\` command.
+2. Run \`specorbit status --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store), then process the requested artifacts in dependency order. For each requested artifact that is \`ready\`, run \`specorbit instructions "<artifact-id>" --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store). Before creating a requested artifact, evaluate any condition in its own \`instruction\` against the explored change; record a deliberate skip instead when the condition does not apply. If a requested artifact is blocked by a direct prerequisite the user did not request, run \`specorbit instructions "<prerequisite-id>" --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store) for that prerequisite whether it is \`ready\` or \`blocked\`. If its own \`instruction\` states a condition, evaluate that condition against the explored change and record a deliberate skip only when the condition does not apply. If the condition applies, or the prerequisite is not conditional, treat it as a normal prerequisite and ask before expanding the capture. Do not create an unrequested prerequisite unless the user approves.
 3. Follow the returned \`template\` and \`instruction\` fields. Read completed dependency files listed in \`dependencies\`, and apply \`context\` and \`rules\` as constraints without copying them into the artifact. If the instruction delegates creation to a specific skill or command, invoke it; otherwise write the artifact to \`resolvedOutputPath\`, using the instruction to choose a concrete path when it is a glob. Verify that the selected concrete output exists.
-4. After creating each artifact, re-run \`openspec status --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store) and continue until every requested artifact is \`done\`, \`skipped\`, or was deliberately skipped because its own \`instruction\` stated a condition that did not apply. Tell the user about a deliberate conditional skip, remember it, and do not reconsider it. Dependencies are enablers, not gates: if a requested artifact is still \`blocked\` only because you deliberately skipped a conditional prerequisite, run \`openspec instructions "<artifact-id>" --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store) despite the blocked status, then create it using step 3 only when those recorded conditional skips are its sole missing dependencies. If a requested artifact is blocked by a prerequisite the user did not ask to capture and cannot be conditionally skipped, explain that dependency and ask before expanding the capture.
+4. After creating each artifact, re-run \`specorbit status --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store) and continue until every requested artifact is \`done\`, \`skipped\`, or was deliberately skipped because its own \`instruction\` stated a condition that did not apply. Tell the user about a deliberate conditional skip, remember it, and do not reconsider it. Dependencies are enablers, not gates: if a requested artifact is still \`blocked\` only because you deliberately skipped a conditional prerequisite, run \`specorbit instructions "<artifact-id>" --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store) despite the blocked status, then create it using step 3 only when those recorded conditional skips are its sole missing dependencies. If a requested artifact is blocked by a prerequisite the user did not ask to capture and cannot be conditionally skipped, explain that dependency and ask before expanding the capture.
 
 Capture the artifact(s) the user requested without asking them to invoke another workflow command. If they asked only to start a change, stop after scaffolding and show its status.
 
@@ -159,7 +159,7 @@ Capture the artifact(s) the user requested without asking them to invoke another
 If the user mentions a change or you detect one is relevant:
 
 1. **Resolve and read existing artifacts for context**
-   - Run \`openspec status --change "<name>" --json\`.
+   - Run \`specorbit status --change "<name>" --json\`.
    - Use \`changeRoot\`, \`artifactPaths\`, and \`actionContext\` from the status JSON.
    - Read existing files from \`artifactPaths.<artifact>.existingOutputPaths\`.
 
@@ -258,7 +258,7 @@ You: [reads codebase]
 
 **User is stuck mid-implementation:**
 \`\`\`
-User: /opsx:explore add-auth-system
+User: /orbit:explore add-auth-system
       The OAuth integration is more complex than expected
 
 You: [reads change artifacts]
@@ -335,36 +335,36 @@ But this summary is optional. Sometimes the thinking IS the value.
 
 ## Guardrails
 
-- **Don't implement** - Never write code or implement features. Workflow configuration counts too: creating or editing schemas, templates, or \`openspec/config.yaml\` is a change, not thinking. Creating or updating OpenSpec change artifacts within the confirmed scope is fine, writing anything else is not.
+- **Don't implement** - Never write code or implement features. Workflow configuration counts too: creating or editing schemas, templates, or \`specorbit/config.yaml\` is a change, not thinking. Creating or updating SpecOrbit change artifacts within the confirmed scope is fine, writing anything else is not.
 - **Don't fake understanding** - If something is unclear, dig deeper
 - **Don't rush** - Discovery is thinking time, not task time
 - **Don't force structure** - Let patterns emerge naturally
-- **Don't auto-capture** - Offer to save insights, don't just do it. Read-only commands and tools need no confirmation. Before the first write-capable action—including \`openspec new change\` or another command that writes files—name the artifacts or files and proposed changes, ask a direct yes/no question, and wait for explicit confirmation in a separate user message. That confirmation covers only the described scope; ask again before expanding it. Answers to design or clarifying questions are never consent to write.
-- **Don't manually scaffold changes** - Never create a new change directory under \`openspec/changes/\` by hand. Always use \`openspec new change "<name>"\` (with \`--store <id>\` when applicable) so required metadata such as \`.openspec.yaml\` is created before writing artifacts.
+- **Don't auto-capture** - Offer to save insights, don't just do it. Read-only commands and tools need no confirmation. Before the first write-capable action—including \`specorbit new change\` or another command that writes files—name the artifacts or files and proposed changes, ask a direct yes/no question, and wait for explicit confirmation in a separate user message. That confirmation covers only the described scope; ask again before expanding it. Answers to design or clarifying questions are never consent to write.
+- **Don't manually scaffold changes** - Never create a new change directory under \`specorbit/changes/\` by hand. Always use \`specorbit new change "<name>"\` (with \`--store <id>\` when applicable) so required metadata such as \`.specorbit.yaml\` is created before writing artifacts.
 - **Do visualize** - A good diagram is worth many paragraphs
 - **Do explore the codebase** - Ground discussions in reality
 - **Do question assumptions** - Including the user's and your own`,
     license: 'MIT',
-    compatibility: 'Requires openspec CLI.',
-    metadata: { author: 'openspec', version: '1.0' },
+    compatibility: 'Requires specorbit CLI.',
+    metadata: { author: 'specorbit', version: '1.0' },
   };
 }
 
-export function getOpsxExploreCommandTemplate(): CommandTemplate {
+export function getOrbitExploreCommandTemplate(): CommandTemplate {
   return {
-    name: 'OPSX: Explore',
+    name: 'Orbit: Explore',
     description: 'Enter explore mode - think through ideas, investigate problems, clarify requirements',
     category: 'Workflow',
     tags: ['workflow', 'explore', 'experimental', 'thinking'],
     content: `Enter explore mode. Think deeply. Visualize freely. Follow the conversation wherever it goes.
 
-**IMPORTANT: Explore mode is for thinking, not implementing.** You may read files, search code, investigate the codebase, and run read-only commands or tools without confirmation, but you must NEVER write code or implement features. If the user asks you to implement something, remind them to exit explore mode first and create a change proposal. You MAY create or update OpenSpec change artifacts (proposals, designs, specs) within a confirmed scope—that's capturing thinking, not implementing. Answering design or clarifying questions is never consent to write. Before the first write-capable action, name the artifacts or files you would change and what you would do, ask a direct yes/no question, and wait for the user's confirmation in a separate message. Confirmation covers only the scope you described; ask again before expanding it. For a new change, scaffold it first as described below.
+**IMPORTANT: Explore mode is for thinking, not implementing.** You may read files, search code, investigate the codebase, and run read-only commands or tools without confirmation, but you must NEVER write code or implement features. If the user asks you to implement something, remind them to exit explore mode first and create a change proposal. You MAY create or update SpecOrbit change artifacts (proposals, designs, specs) within a confirmed scope—that's capturing thinking, not implementing. Answering design or clarifying questions is never consent to write. Before the first write-capable action, name the artifacts or files you would change and what you would do, ask a direct yes/no question, and wait for the user's confirmation in a separate message. Confirmation covers only the scope you described; ask again before expanding it. For a new change, scaffold it first as described below.
 
 **This is a stance, not a workflow.** There are no fixed steps, no required sequence, no mandatory outputs. You're a thinking partner helping the user explore.
 
 ${STORE_SELECTION_GUIDANCE}
 
-**Input**: The argument after \`/opsx:explore\` is whatever the user wants to think about. Could be:
+**Input**: The argument after \`/orbit:explore\` is whatever the user wants to think about. Could be:
 - A vague idea: "real-time collaboration"
 - A specific problem: "the auth system is getting unwieldy"
 - A change name: "add-dark-mode" (to explore in context of that change)
@@ -438,15 +438,15 @@ Unicode diagram glyphs can render at different widths across terminals, fonts, a
 
 ---
 
-## OpenSpec Awareness
+## SpecOrbit Awareness
 
-You have full context of the OpenSpec system. Use it naturally, don't force it.
+You have full context of the SpecOrbit system. Use it naturally, don't force it.
 
 ### Check for context
 
 At the start, quickly check what exists:
 \`\`\`bash
-openspec list --json
+specorbit list --json
 \`\`\`
 
 This tells you:
@@ -456,13 +456,13 @@ This tells you:
 
 That is the *change* list - work in flight. It does not include the project's durable capabilities, so list those too:
 \`\`\`bash
-openspec list --specs
+specorbit list --specs
 \`\`\`
-Add \`--json\` for ids and requirement counts, and append \`--store "<id>"\` only for a registered standalone store. This is the inventory of what the project already claims to do, and \`openspec list\` on its own never shows it. To look at one, run \`openspec show "<spec-id>" --type spec --json --no-scenarios\` (same \`--store\` rule) - it returns that capability's purpose and requirement texts without pulling the whole spec file into context, and \`--type spec\` stops a change of the same name from making it ambiguous.
+Add \`--json\` for ids and requirement counts, and append \`--store "<id>"\` only for a registered standalone store. This is the inventory of what the project already claims to do, and \`specorbit list\` on its own never shows it. To look at one, run \`specorbit show "<spec-id>" --type spec --json --no-scenarios\` (same \`--store\` rule) - it returns that capability's purpose and requirement texts without pulling the whole spec file into context, and \`--type spec\` stops a change of the same name from making it ambiguous.
 
-The filtered read is only an overview. Before deciding what is already covered or what should change, read each relevant spec in full, including scenarios, with \`openspec show "<spec-id>" --type spec\` (same \`--store\` rule).
+The filtered read is only an overview. Before deciding what is already covered or what should change, read each relevant spec in full, including scenarios, with \`specorbit show "<spec-id>" --type spec\` (same \`--store\` rule).
 
-Then read the project's own context from the resolved root - \`<root.path>/openspec/config.yaml\` (or \`config.yml\`). Use the \`root.path\` returned above, and skip this if neither file exists:
+Then read the project's own context from the resolved root - \`<root.path>/specorbit/config.yaml\` (or \`config.yml\`). Use the \`root.path\` returned above, and skip this if neither file exists:
 - \`context\`: project background - tech stack, conventions, constraints
 - \`rules\`: keyed by artifact id - the entries for an artifact apply only when you write that artifact
 
@@ -479,10 +479,10 @@ Think freely. When insights crystallize, you might offer:
 
 If the user asks you to capture the exploration as a new change, transition seamlessly into the requested capture:
 
-1. Run \`openspec new change "<name>"\` (with \`--store <id>\` when applicable) before creating any artifacts. Never create a new change directory under \`openspec/changes/\` by hand; the CLI scaffold creates required metadata such as \`.openspec.yaml\`. Keep the selected \`--store <id>\` on every applicable follow-up \`status\` and \`instructions\` command.
-2. Run \`openspec status --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store), then process the requested artifacts in dependency order. For each requested artifact that is \`ready\`, run \`openspec instructions "<artifact-id>" --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store). Before creating a requested artifact, evaluate any condition in its own \`instruction\` against the explored change; record a deliberate skip instead when the condition does not apply. If a requested artifact is blocked by a direct prerequisite the user did not request, run \`openspec instructions "<prerequisite-id>" --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store) for that prerequisite whether it is \`ready\` or \`blocked\`. If its own \`instruction\` states a condition, evaluate that condition against the explored change and record a deliberate skip only when the condition does not apply. If the condition applies, or the prerequisite is not conditional, treat it as a normal prerequisite and ask before expanding the capture. Do not create an unrequested prerequisite unless the user approves.
+1. Run \`specorbit new change "<name>"\` (with \`--store <id>\` when applicable) before creating any artifacts. Never create a new change directory under \`specorbit/changes/\` by hand; the CLI scaffold creates required metadata such as \`.specorbit.yaml\`. Keep the selected \`--store <id>\` on every applicable follow-up \`status\` and \`instructions\` command.
+2. Run \`specorbit status --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store), then process the requested artifacts in dependency order. For each requested artifact that is \`ready\`, run \`specorbit instructions "<artifact-id>" --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store). Before creating a requested artifact, evaluate any condition in its own \`instruction\` against the explored change; record a deliberate skip instead when the condition does not apply. If a requested artifact is blocked by a direct prerequisite the user did not request, run \`specorbit instructions "<prerequisite-id>" --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store) for that prerequisite whether it is \`ready\` or \`blocked\`. If its own \`instruction\` states a condition, evaluate that condition against the explored change and record a deliberate skip only when the condition does not apply. If the condition applies, or the prerequisite is not conditional, treat it as a normal prerequisite and ask before expanding the capture. Do not create an unrequested prerequisite unless the user approves.
 3. Follow the returned \`template\` and \`instruction\` fields. Read completed dependency files listed in \`dependencies\`, and apply \`context\` and \`rules\` as constraints without copying them into the artifact. If the instruction delegates creation to a specific skill or command, invoke it; otherwise write the artifact to \`resolvedOutputPath\`, using the instruction to choose a concrete path when it is a glob. Verify that the selected concrete output exists.
-4. After creating each artifact, re-run \`openspec status --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store) and continue until every requested artifact is \`done\`, \`skipped\`, or was deliberately skipped because its own \`instruction\` stated a condition that did not apply. Tell the user about a deliberate conditional skip, remember it, and do not reconsider it. Dependencies are enablers, not gates: if a requested artifact is still \`blocked\` only because you deliberately skipped a conditional prerequisite, run \`openspec instructions "<artifact-id>" --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store) despite the blocked status, then create it using step 3 only when those recorded conditional skips are its sole missing dependencies. If a requested artifact is blocked by a prerequisite the user did not ask to capture and cannot be conditionally skipped, explain that dependency and ask before expanding the capture.
+4. After creating each artifact, re-run \`specorbit status --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store) and continue until every requested artifact is \`done\`, \`skipped\`, or was deliberately skipped because its own \`instruction\` stated a condition that did not apply. Tell the user about a deliberate conditional skip, remember it, and do not reconsider it. Dependencies are enablers, not gates: if a requested artifact is still \`blocked\` only because you deliberately skipped a conditional prerequisite, run \`specorbit instructions "<artifact-id>" --change "<name>" --json\` (append the confirmed \`--store "<id>"\` only for a registered standalone store) despite the blocked status, then create it using step 3 only when those recorded conditional skips are its sole missing dependencies. If a requested artifact is blocked by a prerequisite the user did not ask to capture and cannot be conditionally skipped, explain that dependency and ask before expanding the capture.
 
 Capture the artifact(s) the user requested without asking them to invoke another workflow command. If they asked only to start a change, stop after scaffolding and show its status.
 
@@ -491,7 +491,7 @@ Capture the artifact(s) the user requested without asking them to invoke another
 If the user mentions a change or you detect one is relevant:
 
 1. **Resolve and read existing artifacts for context**
-   - Run \`openspec status --change "<name>" --json\`.
+   - Run \`specorbit status --change "<name>" --json\`.
    - Use \`changeRoot\`, \`artifactPaths\`, and \`actionContext\` from the status JSON.
    - Read existing files from \`artifactPaths.<artifact>.existingOutputPaths\`.
 
@@ -547,12 +547,12 @@ When things crystallize, you might offer a summary - but it's optional. Sometime
 
 ## Guardrails
 
-- **Don't implement** - Never write code or implement features. Workflow configuration counts too: creating or editing schemas, templates, or \`openspec/config.yaml\` is a change, not thinking. Creating or updating OpenSpec change artifacts within the confirmed scope is fine, writing anything else is not.
+- **Don't implement** - Never write code or implement features. Workflow configuration counts too: creating or editing schemas, templates, or \`specorbit/config.yaml\` is a change, not thinking. Creating or updating SpecOrbit change artifacts within the confirmed scope is fine, writing anything else is not.
 - **Don't fake understanding** - If something is unclear, dig deeper
 - **Don't rush** - Discovery is thinking time, not task time
 - **Don't force structure** - Let patterns emerge naturally
-- **Don't auto-capture** - Offer to save insights, don't just do it. Read-only commands and tools need no confirmation. Before the first write-capable action—including \`openspec new change\` or another command that writes files—name the artifacts or files and proposed changes, ask a direct yes/no question, and wait for explicit confirmation in a separate user message. That confirmation covers only the described scope; ask again before expanding it. Answers to design or clarifying questions are never consent to write.
-- **Don't manually scaffold changes** - Never create a new change directory under \`openspec/changes/\` by hand. Always use \`openspec new change "<name>"\` (with \`--store <id>\` when applicable) so required metadata such as \`.openspec.yaml\` is created before writing artifacts.
+- **Don't auto-capture** - Offer to save insights, don't just do it. Read-only commands and tools need no confirmation. Before the first write-capable action—including \`specorbit new change\` or another command that writes files—name the artifacts or files and proposed changes, ask a direct yes/no question, and wait for explicit confirmation in a separate user message. That confirmation covers only the described scope; ask again before expanding it. Answers to design or clarifying questions are never consent to write.
+- **Don't manually scaffold changes** - Never create a new change directory under \`specorbit/changes/\` by hand. Always use \`specorbit new change "<name>"\` (with \`--store <id>\` when applicable) so required metadata such as \`.specorbit.yaml\` is created before writing artifacts.
 - **Do visualize** - A good diagram is worth many paragraphs
 - **Do explore the codebase** - Ground discussions in reality
 - **Do question assumptions** - Including the user's and your own`

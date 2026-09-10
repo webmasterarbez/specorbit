@@ -31,7 +31,7 @@ function getWelcomeText(workflows: readonly string[]): string[] {
       quickStart.push(`  ${chalk.yellow(command.padEnd(commandWidth + 1))} ${chalk.dim(description)}`);
     }
     // These are the canonical names. How each tool spells them differs
-    // (/opsx-propose, @opsx-propose, $openspec-propose ...) and cannot be known
+    // (/orbit-propose, @orbit-propose, $specorbit-propose ...) and cannot be known
     // until tools are picked, one prompt later — so flag it rather than let the
     // canonical form read as the literal thing to type. "Getting started"
     // prints the real spelling once the selection is known.
@@ -40,12 +40,12 @@ function getWelcomeText(workflows: readonly string[]): string[] {
   }
 
   return [
-    chalk.white.bold('Welcome to OpenSpec'),
+    chalk.white.bold('Welcome to SpecOrbit'),
     chalk.dim('A lightweight spec-driven framework'),
     '',
     chalk.white('This setup will configure:'),
     chalk.dim('  • Agent Skills for AI tools'),
-    // Not "opsx slash commands": this screen runs before tool selection, and
+    // Not "orbit slash commands": this screen runs before tool selection, and
     // skills-only tools (Codex, Kimi Code, ...) correctly get no command files
     // at all. The exact spelling per tool is printed in "Getting started".
     chalk.dim('  • Workflow commands, if supported'),
@@ -132,7 +132,7 @@ function canAnimate(): boolean {
 
   // Manual override for users who need reduced motion (#722). Presence is
   // what counts: even an empty value disables the animation.
-  if (process.env.OPENSPEC_NO_ANIMATION !== undefined) return false;
+  if (process.env.SPECORBIT_NO_ANIMATION !== undefined) return false;
 
   // Check terminal width
   const columns = process.stdout.columns || 80;

@@ -122,8 +122,8 @@ export interface ArtifactInstructions {
  * the same do-not-create signal as the text output.
  */
 export const SKIP_SPECS_INSTRUCTIONS_WARNING =
-  'This change declares skip_specs: true in .openspec.yaml (no spec-level behavior changes), so this artifact is skipped.\n' +
-  'Do not create spec files - they will conflict with that marker. If requirements now change, remove skip_specs from .openspec.yaml and rerun this command.';
+  'This change declares skip_specs: true in .specorbit.yaml (no spec-level behavior changes), so this artifact is skipped.\n' +
+  'Do not create spec files - they will conflict with that marker. If requirements now change, remove skip_specs from .specorbit.yaml and rerun this command.';
 
 /**
  * Dependency information including path and description.
@@ -254,7 +254,7 @@ export function loadTemplate(
  *
  * Schema resolution order:
  * 1. Explicit schemaName parameter (if provided)
- * 2. Schema from .openspec.yaml metadata (if exists in change directory)
+ * 2. Schema from .specorbit.yaml metadata (if exists in change directory)
  * 3. Default 'spec-driven'
  *
  * @param projectRoot - Project root directory
@@ -269,7 +269,7 @@ export function loadChangeContext(
   options: LoadChangeContextOptions = {}
 ): ChangeContext {
   const changeDir = FileSystemUtils.canonicalizeExistingPath(
-    options.changeDir ?? path.join(projectRoot, 'openspec', 'changes', changeName)
+    options.changeDir ?? path.join(projectRoot, 'specorbit', 'changes', changeName)
   );
 
   const metadata = readChangeMetadata(changeDir, projectRoot) ?? undefined;

@@ -63,9 +63,9 @@ describe('validate: MODIFIED blocks that would drop a main-spec scenario (#1477)
   };
 
   beforeEach(async () => {
-    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'openspec-scenario-loss-'));
-    changesDir = path.join(testDir, 'openspec', 'changes');
-    mainSpecsDir = path.join(testDir, 'openspec', 'specs');
+    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'specorbit-scenario-loss-'));
+    changesDir = path.join(testDir, 'specorbit', 'changes');
+    mainSpecsDir = path.join(testDir, 'specorbit', 'specs');
     await fs.mkdir(changesDir, { recursive: true });
     await fs.mkdir(mainSpecsDir, { recursive: true });
   });

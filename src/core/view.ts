@@ -7,19 +7,19 @@ import { discoverSpecFiles } from '../utils/spec-discovery.js';
 
 export class ViewCommand {
   async execute(targetPath: string = '.'): Promise<void> {
-    const openspecDir = path.join(targetPath, 'openspec');
+    const specorbitDir = path.join(targetPath, 'specorbit');
     
-    if (!fs.existsSync(openspecDir)) {
-      console.error(chalk.red('No openspec directory found'));
+    if (!fs.existsSync(specorbitDir)) {
+      console.error(chalk.red('No specorbit directory found'));
       process.exit(1);
     }
 
-    console.log(chalk.bold('\nOpenSpec Dashboard\n'));
+    console.log(chalk.bold('\nSpecOrbit Dashboard\n'));
     console.log('═'.repeat(60));
 
     // Get changes and specs data
-    const changesData = await this.getChangesData(openspecDir);
-    const specsData = await this.getSpecsData(openspecDir);
+    const changesData = await this.getChangesData(specorbitDir);
+    const specsData = await this.getSpecsData(specorbitDir);
 
     // Display summary metrics
     this.displaySummary(changesData, specsData);
@@ -76,15 +76,15 @@ export class ViewCommand {
     }
 
     console.log('\n' + '═'.repeat(60));
-    console.log(chalk.dim(`\nUse ${chalk.white('openspec list --changes')} or ${chalk.white('openspec list --specs')} for detailed views`));
+    console.log(chalk.dim(`\nUse ${chalk.white('specorbit list --changes')} or ${chalk.white('specorbit list --specs')} for detailed views`));
   }
 
-  private async getChangesData(openspecDir: string): Promise<{
+  private async getChangesData(specorbitDir: string): Promise<{
     draft: Array<{ name: string }>;
     active: Array<{ name: string; progress: { total: number; completed: number } }>;
     completed: Array<{ name: string }>;
   }> {
-    const changesDir = path.join(openspecDir, 'changes');
+    const changesDir = path.join(specorbitDir, 'changes');
 
     if (!fs.existsSync(changesDir)) {
       return { draft: [], active: [], completed: [] };
@@ -98,7 +98,7 @@ export class ViewCommand {
 
     for (const entry of entries) {
       if (entry.isDirectory() && entry.name !== 'archive') {
-        const progress = await getTaskProgressForChange(changesDir, entry.name, path.dirname(openspecDir));
+        const progress = await getTaskProgressForChange(changesDir, entry.name, path.dirname(specorbitDir));
 
         if (progress.total === 0) {
           // No tasks defined yet - still in planning/draft phase
@@ -130,8 +130,8 @@ export class ViewCommand {
     return { draft, active, completed };
   }
 
-  private async getSpecsData(openspecDir: string): Promise<Array<{ name: string; requirementCount: number }>> {
-    const specsDir = path.join(openspecDir, 'specs');
+  private async getSpecsData(specorbitDir: string): Promise<Array<{ name: string; requirementCount: number }>> {
+    const specsDir = path.join(specorbitDir, 'specs');
     
     if (!fs.existsSync(specsDir)) {
       return [];

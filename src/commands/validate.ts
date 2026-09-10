@@ -6,7 +6,7 @@ import {
   resolveRootForCommand,
   toRootOutput,
   withStoreFlag,
-  type ResolvedOpenSpecRoot,
+  type ResolvedSpecOrbitRoot,
   isStoreSelectedRoot,
 } from '../core/root-selection.js';
 import { isInteractive, resolveNoInteractive } from '../utils/interactive.js';
@@ -159,17 +159,17 @@ export class ValidateCommand {
 
   /**
    * Resolve change IDs by directory existence within the resolved root — the
-   * same rule `openspec status`/`instructions` use (`getAvailableChanges`) —
+   * same rule `specorbit status`/`instructions` use (`getAvailableChanges`) —
    * rather than requiring `proposal.md`. This lets `validate` resolve a
    * scaffolded or still-authoring change that the sibling commands already
    * resolve (#1182). Sorted to preserve the prior `getActiveChangeIds` ordering.
    */
-  private async listChangeIds(root: ResolvedOpenSpecRoot): Promise<string[]> {
+  private async listChangeIds(root: ResolvedSpecOrbitRoot): Promise<string[]> {
     const ids = await getAvailableChanges(root.path, root.changesDir);
     return ids.sort();
   }
 
-  private async runInteractiveSelector(root: ResolvedOpenSpecRoot, opts: { strict: boolean; json: boolean; concurrency?: string }): Promise<void> {
+  private async runInteractiveSelector(root: ResolvedSpecOrbitRoot, opts: { strict: boolean; json: boolean; concurrency?: string }): Promise<void> {
     const { select } = await import('@inquirer/prompts');
     const choice = await select({
       message: 'What would you like to validate?',
@@ -199,16 +199,16 @@ export class ValidateCommand {
     await this.validateByType(root, picked.type, picked.id, opts);
   }
 
-  private printNonInteractiveHint(root: ResolvedOpenSpecRoot): void {
+  private printNonInteractiveHint(root: ResolvedSpecOrbitRoot): void {
     console.error('Nothing to validate. Try one of:');
-    console.error(`  ${withStoreFlag(root, 'openspec validate --all')}`);
-    console.error(`  ${withStoreFlag(root, 'openspec validate --changes')}`);
-    console.error(`  ${withStoreFlag(root, 'openspec validate --specs')}`);
-    console.error(`  ${withStoreFlag(root, 'openspec validate <item-name>')}`);
+    console.error(`  ${withStoreFlag(root, 'specorbit validate --all')}`);
+    console.error(`  ${withStoreFlag(root, 'specorbit validate --changes')}`);
+    console.error(`  ${withStoreFlag(root, 'specorbit validate --specs')}`);
+    console.error(`  ${withStoreFlag(root, 'specorbit validate <item-name>')}`);
     console.error('Or run in an interactive terminal.');
   }
 
-  private async validateDirectItem(root: ResolvedOpenSpecRoot, itemName: string, opts: { typeOverride?: ItemType; strict: boolean; json: boolean }): Promise<void> {
+  private async validateDirectItem(root: ResolvedSpecOrbitRoot, itemName: string, opts: { typeOverride?: ItemType; strict: boolean; json: boolean }): Promise<void> {
     const [changes, specs] = await Promise.all([this.listChangeIds(root), getSpecIds(root.path)]);
     const isChange = changes.includes(itemName);
     const isSpec = specs.includes(itemName);
@@ -261,7 +261,7 @@ export class ValidateCommand {
       if (isStoreSelectedRoot(root)) {
         console.error('Pass --type change|spec.');
       } else {
-        console.error('Pass --type change|spec, or use: openspec change validate / openspec spec validate');
+        console.error('Pass --type change|spec, or use: specorbit change validate / specorbit spec validate');
       }
       process.exitCode = 1;
       return;
@@ -270,7 +270,7 @@ export class ValidateCommand {
     await this.validateByType(root, type, itemName, opts);
   }
 
-  private async validateByType(root: ResolvedOpenSpecRoot, type: ItemType, id: string, opts: { strict: boolean; json: boolean }): Promise<void> {
+  private async validateByType(root: ResolvedSpecOrbitRoot, type: ItemType, id: string, opts: { strict: boolean; json: boolean }): Promise<void> {
     const validator = new Validator(opts.strict);
     if (type === 'change') {
       const changeDir = path.join(root.changesDir, id);
@@ -293,7 +293,7 @@ export class ValidateCommand {
     process.exitCode = report.valid ? 0 : 1;
   }
 
-  private printReport(type: ItemType, id: string, report: { valid: boolean; issues: any[] }, durationMs: number, json: boolean, root: ResolvedOpenSpecRoot): void {
+  private printReport(type: ItemType, id: string, report: { valid: boolean; issues: any[] }, durationMs: number, json: boolean, root: ResolvedSpecOrbitRoot): void {
     if (json) {
       const out = { items: [{ id, type, valid: report.valid, issues: report.issues, durationMs }], summary: { totals: { items: 1, passed: report.valid ? 1 : 0, failed: report.valid ? 0 : 1 }, byType: { [type]: { items: 1, passed: report.valid ? 1 : 0, failed: report.valid ? 0 : 1 } } }, version: '1.0', root: toRootOutput(root) };
       console.log(JSON.stringify(out, null, 2));
@@ -313,7 +313,7 @@ export class ValidateCommand {
     }
   }
 
-  private printNextSteps(type: ItemType, id: string, root: ResolvedOpenSpecRoot, issues: Array<{ message: string }> = []): void {
+  private printNextSteps(type: ItemType, id: string, root: ResolvedSpecOrbitRoot, issues: Array<{ message: string }> = []): void {
     const bullets: string[] = [];
     // The delta-authoring bullets contradict a marker-related error ("add
     // deltas" vs "remove skip_specs or the files"), so branch on the exact
@@ -326,15 +326,15 @@ export class ValidateCommand {
       i.message.includes(VALIDATION_MESSAGES.CHANGE_SKIP_SPECS_INVALID_METADATA)
     );
     if (type === 'change' && conflictIssue) {
-      bullets.push('- This change declares skip_specs (no spec deltas): delete the files under specs/, or remove skip_specs from .openspec.yaml if requirements do change');
-      bullets.push('- skip_specs is only honored when .openspec.yaml is valid change metadata (schema: <name> naming a known schema is required)');
+      bullets.push('- This change declares skip_specs (no spec deltas): delete the files under specs/, or remove skip_specs from .specorbit.yaml if requirements do change');
+      bullets.push('- skip_specs is only honored when .specorbit.yaml is valid change metadata (schema: <name> naming a known schema is required)');
     } else if (type === 'change' && invalidMarkerIssue) {
-      bullets.push('- Fix .openspec.yaml so the skip_specs marker can be honored (schema: <name> naming a known schema is required)');
-      bullets.push('- Or remove skip_specs from .openspec.yaml and add delta specs instead');
+      bullets.push('- Fix .specorbit.yaml so the skip_specs marker can be honored (schema: <name> naming a known schema is required)');
+      bullets.push('- Or remove skip_specs from .specorbit.yaml and add delta specs instead');
     } else if (type === 'change') {
       bullets.push('- Ensure change has deltas in specs/: use headers ## ADDED/MODIFIED/REMOVED/RENAMED Requirements');
       bullets.push('- Each requirement MUST include at least one #### Scenario: block');
-      bullets.push(`- Debug parsed deltas: ${withStoreFlag(root, `openspec show ${id} --json --deltas-only`)}`);
+      bullets.push(`- Debug parsed deltas: ${withStoreFlag(root, `specorbit show ${id} --json --deltas-only`)}`);
     } else {
       bullets.push('- Ensure spec includes ## Purpose and ## Requirements sections');
       bullets.push('- Each requirement MUST include at least one #### Scenario: block');
@@ -344,7 +344,7 @@ export class ValidateCommand {
     bullets.forEach(b => console.error(`  ${b}`));
   }
 
-  private printFindingsReport(full: BulkValidationResult, scope: BulkScope, json: boolean, root: ResolvedOpenSpecRoot): void {
+  private printFindingsReport(full: BulkValidationResult, scope: BulkScope, json: boolean, root: ResolvedSpecOrbitRoot): void {
     const findings = projectValidationFindings(full, scope);
     if (json) {
       console.log(JSON.stringify(findings, null, 2));
@@ -365,17 +365,17 @@ export class ValidateCommand {
     if (scope !== 'archived') this.printBulkDetails(full.items, root);
   }
 
-  private printBulkDetails(results: BulkItemResult[], root: ResolvedOpenSpecRoot): void {
+  private printBulkDetails(results: BulkItemResult[], root: ResolvedSpecOrbitRoot): void {
     const firstFailure = results.find((res) => !res.valid);
     if (firstFailure) {
       const storeFlag = isStoreSelectedRoot(root) ? ` --store ${root.storeId}` : '';
       console.log(
-        `Details: openspec validate ${firstFailure.id} --type ${firstFailure.type}${storeFlag}`
+        `Details: specorbit validate ${firstFailure.id} --type ${firstFailure.type}${storeFlag}`
       );
     }
   }
 
-  private async runBulkValidation(root: ResolvedOpenSpecRoot, scope: { changes: boolean; specs: boolean }, opts: { strict: boolean; json: boolean; concurrency?: string; noInteractive?: boolean; findingsScope?: BulkScope }): Promise<void> {
+  private async runBulkValidation(root: ResolvedSpecOrbitRoot, scope: { changes: boolean; specs: boolean }, opts: { strict: boolean; json: boolean; concurrency?: string; noInteractive?: boolean; findingsScope?: BulkScope }): Promise<void> {
     const spinner = !opts.json && !opts.noInteractive ? ora('Validating...').start() : undefined;
     const [changeIds, specIds] = await Promise.all([
       scope.changes ? this.listChangeIds(root) : Promise.resolve<string[]>([]),
@@ -384,7 +384,7 @@ export class ValidateCommand {
 
     const DEFAULT_CONCURRENCY = 6;
     const maxSuggestions = 5; // used by nearestMatches
-    const concurrency = normalizeConcurrency(opts.concurrency) ?? normalizeConcurrency(process.env.OPENSPEC_CONCURRENCY) ?? DEFAULT_CONCURRENCY;
+    const concurrency = normalizeConcurrency(opts.concurrency) ?? normalizeConcurrency(process.env.SPECORBIT_CONCURRENCY) ?? DEFAULT_CONCURRENCY;
     const validator = new Validator(opts.strict);
     const queue: Array<() => Promise<BulkItemResult>> = [];
 
@@ -510,7 +510,7 @@ export class ValidateCommand {
    * failure and must not read as "no archived changes" — that would let a
    * pre-commit lint pass without inspecting anything (#205).
    */
-  private async listArchivedChangeIds(root: ResolvedOpenSpecRoot): Promise<string[]> {
+  private async listArchivedChangeIds(root: ResolvedSpecOrbitRoot): Promise<string[]> {
     try {
       const entries = await fs.readdir(root.archiveDir, { withFileTypes: true });
       return entries
@@ -534,7 +534,7 @@ export class ValidateCommand {
    * tasks pass (nothing to complete).
    */
   private async runArchivedTaskValidation(
-    root: ResolvedOpenSpecRoot,
+    root: ResolvedSpecOrbitRoot,
     opts: { json: boolean; noInteractive?: boolean; findingsScope?: BulkScope }
   ): Promise<void> {
     // List first (may throw on a real archive-read failure), then start the

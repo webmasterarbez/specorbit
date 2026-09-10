@@ -23,7 +23,10 @@ describe('pnpm workspace configuration', () => {
       .map((key) => key.slice('esbuild@'.length));
 
     expect(workspace.packages).toEqual(['.']);
-    expect(packageJson.pnpm.onlyBuiltDependencies).toEqual(['esbuild']);
+    // Build approvals are single-sourced in pnpm-workspace.yaml `allowBuilds`.
+    // The vestigial `pnpm.onlyBuiltDependencies` field in package.json is no
+    // longer read by pnpm and MUST stay absent so it cannot drift.
+    expect(packageJson.pnpm).toBeUndefined();
     expect(esbuildVersions).toHaveLength(1);
     expect(workspace.allowBuilds).toEqual({
       [`esbuild@${esbuildVersions[0]}`]: true,
@@ -31,29 +34,13 @@ describe('pnpm workspace configuration', () => {
     // Overrides are declared once, in pnpm-workspace.yaml. A `pnpm.overrides` block
     // in package.json replaces that list rather than merging with it, and Dependabot
     // rewrites plain-name entries there when it bumps the same package — so a mirrored
-    // copy silently displaces the pins that patch advisories.
-    expect(packageJson.pnpm.overrides).toBeUndefined();
+    // copy silently displaces the pins that patch advisories. (`packageJson.pnpm`
+    // is asserted absent above, which covers this.)
     expect(workspace.overrides).toEqual(lockfile.overrides);
   });
 
-  it('keeps the website as an independently locked project', () => {
-    const packageJson = readJson('website/package.json');
-    const lockfile = readYaml('website/pnpm-lock.yaml');
-    const workspace = readYaml('website/pnpm-workspace.yaml');
-    const esbuildVersions = Object.keys(lockfile.packages)
-      .filter((key) => key.startsWith('esbuild@'))
-      .map((key) => key.slice('esbuild@'.length));
-
-    expect(workspace.packages).toEqual(['.']);
-    expect(packageJson.pnpm.onlyBuiltDependencies).toEqual(['esbuild']);
-    expect(esbuildVersions).toHaveLength(1);
-    expect(workspace.allowBuilds).toEqual({
-      [`esbuild@${esbuildVersions[0]}`]: true,
-    });
-    // Single-sourced in website/pnpm-workspace.yaml, for the reason above.
-    expect(packageJson.pnpm.overrides).toBeUndefined();
-    expect(workspace.overrides).toEqual(lockfile.overrides);
-  });
+  // The fork dropped upstream's website/ (see specorbit/changes/rebrand-fork-as-specorbit);
+  // there is no second locked project to keep aligned anymore.
 
   it('includes install policy changes in Nix and security validation', () => {
     const flake = fs.readFileSync(path.join(projectRoot, 'flake.nix'), 'utf8');

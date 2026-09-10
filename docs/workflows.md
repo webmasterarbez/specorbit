@@ -1,12 +1,12 @@
 # Workflows
 
-This guide covers common workflow patterns for OpenSpec and when to use each one. For basic setup, see [Getting Started](getting-started.md). For command reference, see [Commands](commands.md).
+This guide covers common workflow patterns for SpecOrbit and when to use each one. For basic setup, see [Getting Started](getting-started.md). For command reference, see [Commands](commands.md).
 
 ## Philosophy: Actions, Not Phases
 
 Traditional workflows force you through phases: planning, then implementation, then done. But real work doesn't fit neatly into boxes.
 
-OPSX takes a different approach:
+Orbit takes a different approach:
 
 ```text
 Traditional (phase-locked):
@@ -16,7 +16,7 @@ Traditional (phase-locked):
       │   "Can't go back"  │
       └────────────────────┘
 
-OPSX (fluid actions):
+Orbit (fluid actions):
 
   proposal ──► specs ──► design ──► tasks ──► implement
 ```
@@ -26,7 +26,7 @@ OPSX (fluid actions):
 - **Actions, not phases** - Commands are things you can do, not stages you're stuck in
 - **Dependencies are enablers** - They show what's possible, not what's required next
 
-> **Customization:** OPSX workflows are driven by schemas that define artifact sequences. See [Customization](customization.md) for details on creating custom schemas.
+> **Customization:** Orbit workflows are driven by schemas that define artifact sequences. See [Customization](customization.md) for details on creating custom schemas.
 
 ## Workflow at a Glance
 
@@ -35,17 +35,17 @@ you can update planning artifacts whenever implementation reveals something new.
 
 ```mermaid
 flowchart TD
-    Idea["Idea or problem"] --> Explore["/opsx:explore<br/>(optional)"]
-    Idea --> Propose["/opsx:propose"]
+    Idea["Idea or problem"] --> Explore["/orbit:explore<br/>(optional)"]
+    Idea --> Propose["/orbit:propose"]
     Explore --> Propose
     Propose --> Review{"Planning artifacts<br/>ready?"}
-    Review -->|"Refine"| Update["/opsx:update"]
+    Review -->|"Refine"| Update["/orbit:update"]
     Update --> Review
-    Review -->|"Implement"| Apply["/opsx:apply"]
+    Review -->|"Implement"| Apply["/orbit:apply"]
     Apply -->|"Plan changed"| Update
-    Apply --> Archive["/opsx:archive"]
-    Apply --> Verify["/opsx:verify<br/>(optional, custom selection)"]
-    Apply --> Sync["/opsx:sync<br/>(optional before archive)"]
+    Apply --> Archive["/orbit:archive"]
+    Apply --> Verify["/orbit:verify<br/>(optional, custom selection)"]
+    Apply --> Sync["/orbit:sync<br/>(optional before archive)"]
     Verify --> Verified{"Ready to archive?"}
     Verified -->|"Fix implementation"| Apply
     Verified -->|"Revise plan"| Update
@@ -61,24 +61,24 @@ scaffolding, status, and artifact instructions:
 sequenceDiagram
     actor Human
     participant Assistant as AI assistant
-    participant CLI as OpenSpec CLI
+    participant CLI as SpecOrbit CLI
     participant Files as Planning and implementation files
 
-    Human->>Assistant: /opsx:propose "change"
-    Assistant->>CLI: openspec new change
+    Human->>Assistant: /orbit:propose "change"
+    Assistant->>CLI: specorbit new change
     CLI->>Files: Scaffold change metadata
     Assistant->>CLI: Request status and artifact instructions
     CLI-->>Assistant: Build order, paths, and templates
     Assistant->>Files: Write schema-defined planning artifacts
     Assistant-->>Human: Present artifacts for review
 
-    Human->>Assistant: /opsx:apply
+    Human->>Assistant: /orbit:apply
     Assistant->>CLI: Request apply instructions
     CLI-->>Assistant: Context files and task state
     Assistant->>Files: Implement tasks and update checkboxes
     Assistant-->>Human: Report implementation status
 
-    Human->>Assistant: /opsx:archive
+    Human->>Assistant: /orbit:archive
     Assistant->>CLI: Request archive inputs and artifact status
     CLI-->>Assistant: Planning paths and artifact completion
     Assistant->>Files: Read task state and compare delta specs
@@ -94,7 +94,7 @@ sequenceDiagram
     Assistant->>Files: Move the change into the archive
     Assistant-->>Human: Report archive location and sync result
 
-    Note over Human,CLI: CLI alternative: openspec archive change-name --yes skips confirmation prompts. It still validates, then applies any delta specs and archives
+    Note over Human,CLI: CLI alternative: specorbit archive change-name --yes skips confirmation prompts. It still validates, then applies any delta specs and archives
 ```
 
 ## Two Modes
@@ -102,26 +102,26 @@ sequenceDiagram
 ### Default Quick Path (`core` profile)
 
 New installs default to `core`, which provides:
-- `/opsx:explore`
-- `/opsx:propose`
-- `/opsx:apply`
-- `/opsx:update`
-- `/opsx:sync`
-- `/opsx:archive`
+- `/orbit:explore`
+- `/orbit:propose`
+- `/orbit:apply`
+- `/orbit:update`
+- `/orbit:sync`
+- `/orbit:archive`
 
 Typical flow:
 
 ```text
-/opsx:explore ──► /opsx:propose ──► /opsx:apply ──► /opsx:sync ──► /opsx:archive
+/orbit:explore ──► /orbit:propose ──► /orbit:apply ──► /orbit:sync ──► /orbit:archive
   (optional)
 ```
 
 #### Start by exploring (the habit worth forming)
 
-`/opsx:explore` is part of the default profile, not an advanced add-on. It's the move to make whenever you have a problem but not yet a plan, which, with an AI assistant, is most of the time.
+`/orbit:explore` is part of the default profile, not an advanced add-on. It's the move to make whenever you have a problem but not yet a plan, which, with an AI assistant, is most of the time.
 
 ```text
-You: /opsx:explore
+You: /orbit:explore
 
 AI:  What would you like to explore?
 
@@ -137,18 +137,18 @@ AI:  Let me look... [reads the search service and cache layer]
 
 You: Yes.
 
-You: /opsx:propose rebuild-search-index-on-write
+You: /orbit:propose rebuild-search-index-on-write
 ```
 
-Explore creates no artifacts and writes no code. It's a free, no-stakes conversation that turns a vague worry into a precise change, so the proposal that follows is sharp. Already know exactly what you want? Skip it and go straight to `/opsx:propose`. Full guide: [Explore First](explore.md).
+Explore creates no artifacts and writes no code. It's a free, no-stakes conversation that turns a vague worry into a precise change, so the proposal that follows is sharp. Already know exactly what you want? Skip it and go straight to `/orbit:propose`. Full guide: [Explore First](explore.md).
 
 ### Expanded/Full Workflow (custom selection)
 
-If you want explicit scaffold-and-build commands (`/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:bulk-archive`, `/opsx:onboard`), enable them with:
+If you want explicit scaffold-and-build commands (`/orbit:new`, `/orbit:continue`, `/orbit:ff`, `/orbit:verify`, `/orbit:bulk-archive`, `/orbit:onboard`), enable them with:
 
 ```bash
-openspec config profile
-openspec update
+specorbit config profile
+specorbit update
 ```
 
 ## Workflow Patterns (Expanded Mode)
@@ -158,18 +158,18 @@ openspec update
 When you know what you want to build and just need to execute:
 
 ```text
-/opsx:new ──► /opsx:ff ──► /opsx:apply ──► /opsx:verify ──► /opsx:archive
+/orbit:new ──► /orbit:ff ──► /orbit:apply ──► /orbit:verify ──► /orbit:archive
 ```
 
 **Example conversation:**
 
 ```text
-You: /opsx:new add-logout-button
+You: /orbit:new add-logout-button
 
-AI:  Created openspec/changes/add-logout-button/
+AI:  Created specorbit/changes/add-logout-button/
      Ready to create: proposal
 
-You: /opsx:ff
+You: /orbit:ff
 
 AI:  Creating all planning artifacts...
      ✓ proposal.md
@@ -178,7 +178,7 @@ AI:  Creating all planning artifacts...
      ✓ tasks.md
      Ready for implementation!
 
-You: /opsx:apply
+You: /orbit:apply
 
 AI:  Working through tasks...
      ✓ Added logout button to header
@@ -186,7 +186,7 @@ AI:  Working through tasks...
      ✓ Added confirmation dialog
      All tasks complete!
 
-You: /opsx:archive
+You: /orbit:archive
 
 AI:  ✓ Merged specs
      ✓ Archived change
@@ -199,13 +199,13 @@ AI:  ✓ Merged specs
 When requirements are unclear or you need to investigate first:
 
 ```text
-/opsx:explore ──► /opsx:new ──► /opsx:continue ──► ... ──► /opsx:apply
+/orbit:explore ──► /orbit:new ──► /orbit:continue ──► ... ──► /orbit:apply
 ```
 
 **Example conversation:**
 
 ```text
-You: /opsx:explore
+You: /orbit:explore
 
 AI:  What would you like to explore?
 
@@ -225,11 +225,11 @@ AI:  Let me help investigate...
 
 You: Let's tackle the data fetching issue.
 
-You: /opsx:new optimize-product-list-fetching
+You: /orbit:new optimize-product-list-fetching
 
 AI:  Created change. Ready to create: proposal
 
-You: /opsx:continue
+You: /orbit:continue
 
 AI:  Creating proposal based on our exploration...
      [Writes proposal incorporating investigation insights]
@@ -237,7 +237,7 @@ AI:  Creating proposal based on our exploration...
      Ready to create: specs, design
      Which would you like next?
 
-You: /opsx:continue
+You: /orbit:continue
 
 AI:  Creating specs...
 ```
@@ -249,11 +249,11 @@ AI:  Creating specs...
 Work on multiple changes at once:
 
 ```text
-Change A: /opsx:new ──► /opsx:ff ──► /opsx:apply (in progress)
+Change A: /orbit:new ──► /orbit:ff ──► /orbit:apply (in progress)
                                          │
                                     context switch
                                          │
-Change B: /opsx:new ──► /opsx:ff ──────► /opsx:apply
+Change B: /orbit:new ──► /orbit:ff ──────► /orbit:apply
 ```
 
 **Example conversation:**
@@ -261,27 +261,27 @@ Change B: /opsx:new ──► /opsx:ff ──────► /opsx:apply
 ```text
 You: I'm working on add-dark-mode but got pulled into a bug fix
 
-You: /opsx:new fix-login-redirect
+You: /orbit:new fix-login-redirect
 
-AI:  Created openspec/changes/fix-login-redirect/
+AI:  Created specorbit/changes/fix-login-redirect/
 
-You: /opsx:ff
+You: /orbit:ff
 
 AI:  ✓ Created planning artifacts
 
-You: /opsx:apply
+You: /orbit:apply
 
 AI:  Working on fix-login-redirect...
      [Implements the fix]
      All tasks complete!
 
-You: /opsx:archive
+You: /orbit:archive
 
 AI:  ✓ Archived fix-login-redirect
 
 You: Let's get back to dark mode
 
-You: /opsx:apply add-dark-mode
+You: /orbit:apply add-dark-mode
 
 AI:  Resuming add-dark-mode...
      Picking up at task 2.3: Update Header...
@@ -289,10 +289,10 @@ AI:  Resuming add-dark-mode...
 
 **Best for:** Parallel work streams, urgent interrupts, team collaboration.
 
-When you have multiple completed changes, use `/opsx:bulk-archive`:
+When you have multiple completed changes, use `/orbit:bulk-archive`:
 
 ```text
-You: /opsx:bulk-archive
+You: /orbit:bulk-archive
 
 AI:  Found 3 completed changes:
      - add-dark-mode (all tasks done)
@@ -322,7 +322,7 @@ Bulk archive detects when multiple changes touch the same specs and resolves con
 The recommended completion flow:
 
 ```text
-/opsx:apply ──► /opsx:verify ──► /opsx:archive
+/orbit:apply ──► /orbit:verify ──► /orbit:archive
                     │                 │
               validates          prompts to sync
               implementation     if needed
@@ -330,10 +330,10 @@ The recommended completion flow:
 
 #### Verify: Check Your Work
 
-`/opsx:verify` validates implementation against your artifacts across three dimensions:
+`/orbit:verify` validates implementation against your artifacts across three dimensions:
 
 ```text
-You: /opsx:verify
+You: /orbit:verify
 
 AI:  Verifying add-auth...
 
@@ -375,10 +375,10 @@ Verify won't block archive, but it surfaces issues you might want to address fir
 
 #### Archive: Finalize the Change
 
-`/opsx:archive` completes the change and moves it to the archive:
+`/orbit:archive` completes the change and moves it to the archive:
 
 ```text
-You: /opsx:archive
+You: /orbit:archive
 
 AI:  Archiving add-auth...
 
@@ -393,8 +393,8 @@ AI:  Archiving add-auth...
 
 You: Yes
 
-AI:  ✓ Synced specs to openspec/specs/auth/spec.md
-     ✓ Moved to openspec/changes/archive/2025-01-24-add-auth/
+AI:  ✓ Synced specs to specorbit/specs/auth/spec.md
+     ✓ Moved to specorbit/changes/archive/2025-01-24-add-auth/
 
      Change archived successfully.
 ```
@@ -403,17 +403,17 @@ Archive will prompt if specs aren't synced. It won't block on incomplete tasks, 
 
 ## When to Use What
 
-### `/opsx:ff` vs `/opsx:continue`
+### `/orbit:ff` vs `/orbit:continue`
 
 | Situation | Use |
 |-----------|-----|
-| Clear requirements, ready to build | `/opsx:ff` |
-| Exploring, want to review each step | `/opsx:continue` |
-| Want to iterate on proposal before specs | `/opsx:continue` |
-| Time pressure, need to move fast | `/opsx:ff` |
-| Complex change, want control | `/opsx:continue` |
+| Clear requirements, ready to build | `/orbit:ff` |
+| Exploring, want to review each step | `/orbit:continue` |
+| Want to iterate on proposal before specs | `/orbit:continue` |
+| Time pressure, need to move fast | `/orbit:ff` |
+| Complex change, want control | `/orbit:continue` |
 
-**Rule of thumb:** If you can describe the full scope upfront, use `/opsx:ff`. If you're figuring it out as you go, use `/opsx:continue`.
+**Rule of thumb:** If you can describe the full scope upfront, use `/orbit:ff`. If you're figuring it out as you go, use `/orbit:continue`.
 
 ### When to Update vs Start Fresh
 
@@ -471,12 +471,12 @@ One logical unit of work per change. If you're doing "add feature X and also ref
 - Can ship independently
 - Simpler rollback if needed
 
-### Use `/opsx:explore` for Unclear Requirements
+### Use `/orbit:explore` for Unclear Requirements
 
 Before committing to a change, explore the problem space:
 
 ```text
-You: /opsx:explore
+You: /orbit:explore
 
 AI:  What would you like to explore?
 
@@ -497,10 +497,10 @@ Exploration clarifies thinking before you create artifacts.
 
 ### Verify Before Archiving
 
-Use `/opsx:verify` to check implementation matches artifacts:
+Use `/orbit:verify` to check implementation matches artifacts:
 
 ```text
-You: /opsx:verify
+You: /orbit:verify
 
 AI:  Verifying add-dark-mode...
 
@@ -515,7 +515,7 @@ Catches mismatches before you close out the change.
 
 ### Name Changes Clearly
 
-Good names make `openspec list` useful:
+Good names make `specorbit list` useful:
 
 ```text
 Good:                          Avoid:
@@ -531,22 +531,22 @@ For full command details and options, see [Commands](commands.md).
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/opsx:propose` | Create change + planning artifacts | Fast default path (`core` profile) |
-| `/opsx:explore` | Think through ideas with the AI | Start here when unsure: unclear requirements, investigation, comparing options |
-| `/opsx:new` | Start a change scaffold | Expanded mode, explicit artifact control |
-| `/opsx:continue` | Create next artifact | Expanded mode, step-by-step artifact creation |
-| `/opsx:ff` | Create all planning artifacts | Expanded mode, clear scope |
-| `/opsx:apply` | Implement tasks | Ready to write code |
-| `/opsx:verify` | Validate implementation | Expanded mode, before archiving |
-| `/opsx:sync` | Merge delta specs | Expanded mode, optional |
-| `/opsx:archive` | Complete the change | All work finished |
-| `/opsx:bulk-archive` | Archive multiple changes | Expanded mode, parallel work |
+| `/orbit:propose` | Create change + planning artifacts | Fast default path (`core` profile) |
+| `/orbit:explore` | Think through ideas with the AI | Start here when unsure: unclear requirements, investigation, comparing options |
+| `/orbit:new` | Start a change scaffold | Expanded mode, explicit artifact control |
+| `/orbit:continue` | Create next artifact | Expanded mode, step-by-step artifact creation |
+| `/orbit:ff` | Create all planning artifacts | Expanded mode, clear scope |
+| `/orbit:apply` | Implement tasks | Ready to write code |
+| `/orbit:verify` | Validate implementation | Expanded mode, before archiving |
+| `/orbit:sync` | Merge delta specs | Expanded mode, optional |
+| `/orbit:archive` | Complete the change | All work finished |
+| `/orbit:bulk-archive` | Archive multiple changes | Expanded mode, parallel work |
 
 ## Next Steps
 
 - [Writing Good Specs](writing-specs.md) - What a strong requirement and scenario look like, and how to right-size a change
 - [Reviewing a Change](reviewing-changes.md) - The two-minute pass on a drafted plan before any code
-- [OpenSpec on a Team](team-workflow.md) - How changes fit branches and pull requests
+- [SpecOrbit on a Team](team-workflow.md) - How changes fit branches and pull requests
 - [Commands](commands.md) - Full command reference with options
 - [Concepts](concepts.md) - Deep dive into specs, artifacts, and schemas
 - [Customization](customization.md) - Create custom workflows

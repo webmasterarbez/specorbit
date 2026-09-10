@@ -1,4 +1,4 @@
-# OpenSpec Test Guidance
+# SpecOrbit Test Guidance
 
 Applies to tests under `test/`.
 

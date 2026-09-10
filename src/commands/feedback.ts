@@ -33,7 +33,7 @@ function isGhAuthenticated(): boolean {
 }
 
 /**
- * Get OpenSpec version from package.json
+ * Get SpecOrbit version from package.json
  */
 function getVersion(): string {
   try {
@@ -67,7 +67,7 @@ function generateMetadata(): string {
   const timestamp = getTimestamp();
 
   return `---
-Submitted via OpenSpec CLI
+Submitted via SpecOrbit CLI
 - Version: ${version}
 - Platform: ${platform}
 - Timestamp: ${timestamp}`;
@@ -125,7 +125,7 @@ function formatBody(message: string, bodyText?: string): string {
  * Generate a pre-filled GitHub issue URL for manual submission
  */
 function generateManualSubmissionUrl(title: string, body: string): string {
-  const repo = 'Fission-AI/OpenSpec';
+  const repo = 'specorbit/specorbit';
   const encodedTitle = encodeURIComponent(title);
   const encodedBody = encodeURIComponent(body);
   const encodedLabels = encodeURIComponent('feedback');
@@ -191,7 +191,7 @@ function createIssue(title: string, body: string, labels: string[]): string {
     'issue',
     'create',
     '--repo',
-    'Fission-AI/OpenSpec',
+    'specorbit/specorbit',
     '--title',
     title,
     '--body',

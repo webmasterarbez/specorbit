@@ -11,17 +11,17 @@ import { Validator } from '../../src/core/validation/validator.js';
 /**
  * Apply gates on the schema's `apply.requires` (tasks) alone, so a change whose
  * tasks file was written ahead of its specs reads as ready with no spec deltas
- * at all - the state `openspec validate` rejects. Apply has to say so.
+ * at all - the state `specorbit validate` rejects. Apply has to say so.
  */
 describe('generateApplyInstructions warnings', () => {
   let tempDir: string;
   let changeDir: string;
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openspec-apply-warnings-'));
-    changeDir = path.join(tempDir, 'openspec', 'changes', 'my-change');
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'specorbit-apply-warnings-'));
+    changeDir = path.join(tempDir, 'specorbit', 'changes', 'my-change');
     fs.mkdirSync(changeDir, { recursive: true });
-    fs.writeFileSync(path.join(changeDir, '.openspec.yaml'), 'schema: spec-driven\n');
+    fs.writeFileSync(path.join(changeDir, '.specorbit.yaml'), 'schema: spec-driven\n');
     fs.writeFileSync(path.join(changeDir, 'proposal.md'), '## Why\nx\n');
   });
 
@@ -54,14 +54,14 @@ describe('generateApplyInstructions warnings', () => {
     expect(instructions.warnings).toHaveLength(1);
     expect(instructions.warnings?.[0]).toContain('no delta specs');
     expect(instructions.warnings?.[0]).toContain('skip_specs: true');
-    expect(instructions.warnings?.[0]).toContain('openspec validate my-change');
+    expect(instructions.warnings?.[0]).toContain('specorbit validate my-change');
     expect(instructions.warnings?.[0]).toContain(
-      'openspec instructions specs --change my-change'
+      'specorbit instructions specs --change my-change'
     );
     // Not the absolute path: on Windows the CLI resolves `os.tmpdir()`'s short
     // form (C:\Users\RUNNER~1) to its long one, so only the tail is stable.
     expect(instructions.warnings?.[0]).toContain(
-      path.join('my-change', '.openspec.yaml')
+      path.join('my-change', '.specorbit.yaml')
     );
   });
 
@@ -77,7 +77,7 @@ describe('generateApplyInstructions warnings', () => {
 
   it('stays quiet for a change that declares skip_specs', async () => {
     fs.writeFileSync(
-      path.join(changeDir, '.openspec.yaml'),
+      path.join(changeDir, '.specorbit.yaml'),
       'schema: spec-driven\nskip_specs: true\n'
     );
     writeTasks();
@@ -125,7 +125,7 @@ describe('generateApplyInstructions warnings', () => {
   });
 
   it('stays quiet for a schema that produces no specs at all', async () => {
-    const schemaDir = path.join(tempDir, 'openspec', 'schemas', 'mini');
+    const schemaDir = path.join(tempDir, 'specorbit', 'schemas', 'mini');
     fs.mkdirSync(schemaDir, { recursive: true });
     fs.writeFileSync(
       path.join(schemaDir, 'schema.yaml'),
@@ -148,7 +148,7 @@ describe('generateApplyInstructions warnings', () => {
         '',
       ].join('\n')
     );
-    fs.writeFileSync(path.join(changeDir, '.openspec.yaml'), 'schema: mini\n');
+    fs.writeFileSync(path.join(changeDir, '.specorbit.yaml'), 'schema: mini\n');
     writeTasks();
 
     const instructions = await generateApplyInstructions(tempDir, 'my-change');
@@ -158,7 +158,7 @@ describe('generateApplyInstructions warnings', () => {
   });
 
   it('warns for a custom schema whose spec artifact is named something else', async () => {
-    const schemaDir = path.join(tempDir, 'openspec', 'schemas', 'renamed');
+    const schemaDir = path.join(tempDir, 'specorbit', 'schemas', 'renamed');
     fs.mkdirSync(schemaDir, { recursive: true });
     fs.writeFileSync(
       path.join(schemaDir, 'schema.yaml'),
@@ -186,7 +186,7 @@ describe('generateApplyInstructions warnings', () => {
         '',
       ].join('\n')
     );
-    fs.writeFileSync(path.join(changeDir, '.openspec.yaml'), 'schema: renamed\n');
+    fs.writeFileSync(path.join(changeDir, '.specorbit.yaml'), 'schema: renamed\n');
     writeTasks();
 
     const instructions = await generateApplyInstructions(tempDir, 'my-change');
@@ -197,15 +197,15 @@ describe('generateApplyInstructions warnings', () => {
     // `specs` sent the agent to an artifact this schema does not declare, so
     // the warning dead-ended at the step meant to resolve it.
     expect(instructions.warnings?.[0]).toContain(
-      'openspec instructions contracts --change my-change'
+      'specorbit instructions contracts --change my-change'
     );
-    expect(instructions.warnings?.[0]).not.toContain('openspec instructions specs');
+    expect(instructions.warnings?.[0]).not.toContain('specorbit instructions specs');
   });
 
   it('falls back to a placeholder when a schema declares two spec artifacts', async () => {
     // No single right answer, so the command must not pick one and present it
     // as the step to run.
-    const schemaDir = path.join(tempDir, 'openspec', 'schemas', 'twospec');
+    const schemaDir = path.join(tempDir, 'specorbit', 'schemas', 'twospec');
     fs.mkdirSync(schemaDir, { recursive: true });
     fs.writeFileSync(
       path.join(schemaDir, 'schema.yaml'),
@@ -238,23 +238,23 @@ describe('generateApplyInstructions warnings', () => {
         '',
       ].join('\n')
     );
-    fs.writeFileSync(path.join(changeDir, '.openspec.yaml'), 'schema: twospec\n');
+    fs.writeFileSync(path.join(changeDir, '.specorbit.yaml'), 'schema: twospec\n');
     writeTasks();
 
     const instructions = await generateApplyInstructions(tempDir, 'my-change');
 
     expect(instructions.warnings).toHaveLength(1);
     expect(instructions.warnings?.[0]).toContain(
-      'openspec instructions <artifact-id> --change my-change'
+      'specorbit instructions <artifact-id> --change my-change'
     );
     // Presence of the placeholder is not enough: naming either artifact as
     // well would still be picking one, which is the thing there is no basis
     // for here.
-    expect(instructions.warnings?.[0]).not.toContain('openspec instructions contracts');
-    expect(instructions.warnings?.[0]).not.toContain('openspec instructions schemas');
+    expect(instructions.warnings?.[0]).not.toContain('specorbit instructions contracts');
+    expect(instructions.warnings?.[0]).not.toContain('specorbit instructions schemas');
   });
 
-  // The warning tells the author `openspec validate` fails on this change. If
+  // The warning tells the author `specorbit validate` fails on this change. If
   // that ever stops being true the warning is a lie, so pin it to the validator
   // rather than to a copy of its rule.
   it('warns about exactly the state the validator rejects', async () => {

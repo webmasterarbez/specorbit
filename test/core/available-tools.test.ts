@@ -8,7 +8,7 @@ describe('available-tools', () => {
   let testDir: string;
 
   beforeEach(async () => {
-    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'openspec-test-'));
+    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'specorbit-test-'));
     vi.stubEnv('HOME', path.join(testDir, 'home'));
     vi.stubEnv('USERPROFILE', path.join(testDir, 'home'));
   });
@@ -40,7 +40,7 @@ describe('available-tools', () => {
         'home',
         '.minimax',
         'skills',
-        'openspec-explore',
+        'specorbit-explore',
         'SKILL.md'
       );
       await fs.mkdir(path.dirname(globalSkill), { recursive: true });
@@ -53,7 +53,7 @@ describe('available-tools', () => {
         testDir,
         '.minimax',
         'skills',
-        'openspec-explore',
+        'specorbit-explore',
         'SKILL.md'
       );
       await fs.mkdir(path.dirname(localSkill), { recursive: true });
@@ -151,7 +151,7 @@ describe('available-tools', () => {
       await fs.mkdir(path.join(testDir, '.agents', 'skills'), { recursive: true });
       await fs.mkdir(path.join(testDir, '.agents', 'workflows'), { recursive: true });
       await fs.writeFile(
-        path.join(testDir, '.agents', 'skills', '.openspec-target'),
+        path.join(testDir, '.agents', 'skills', '.specorbit-target'),
         'codex\n'
       );
 
@@ -188,7 +188,7 @@ describe('available-tools', () => {
 
     it('should use the shared-root marker to distinguish Codex from agents', async () => {
       await fs.mkdir(path.join(testDir, '.agents', 'skills'), { recursive: true });
-      await fs.writeFile(path.join(testDir, '.agents', 'skills', '.openspec-target'), 'codex\n');
+      await fs.writeFile(path.join(testDir, '.agents', 'skills', '.specorbit-target'), 'codex\n');
 
       const tools = getAvailableTools(testDir);
       expect(tools.map((tool) => tool.value)).toContain('codex');
@@ -198,7 +198,7 @@ describe('available-tools', () => {
 
     it('should use the shared-root marker to detect a configured Zed Agent target', async () => {
       await fs.mkdir(path.join(testDir, '.agents', 'skills'), { recursive: true });
-      await fs.writeFile(path.join(testDir, '.agents', 'skills', '.openspec-target'), 'zed\n');
+      await fs.writeFile(path.join(testDir, '.agents', 'skills', '.specorbit-target'), 'zed\n');
 
       expect(getAvailableTools(testDir).map((tool) => tool.value)).toEqual(['zed']);
     });
@@ -210,11 +210,11 @@ describe('available-tools', () => {
         'home',
         '.minimax',
         'skills',
-        'openspec-explore',
+        'specorbit-explore',
         'SKILL.md'
       );
       await fs.mkdir(sharedSkills, { recursive: true });
-      await fs.writeFile(path.join(sharedSkills, '.openspec-target'), 'agents\n');
+      await fs.writeFile(path.join(sharedSkills, '.specorbit-target'), 'agents\n');
       await fs.mkdir(path.dirname(globalSkill), { recursive: true });
       await fs.writeFile(globalSkill, 'content');
 
@@ -229,11 +229,11 @@ describe('available-tools', () => {
         testDir,
         '.agents',
         'skills',
-        'openspec-propose',
+        'specorbit-propose',
         'SKILL.md'
       );
       await fs.mkdir(path.dirname(skillFile), { recursive: true });
-      await fs.writeFile(skillFile, 'Next: $openspec-apply-change');
+      await fs.writeFile(skillFile, 'Next: $specorbit-apply-change');
 
       const tools = getAvailableTools(testDir);
       expect(tools.map((tool) => tool.value)).toEqual(['codex']);
@@ -243,10 +243,10 @@ describe('available-tools', () => {
       'should preserve generic content when the shared marker is %j',
       async (marker) => {
         const skillsDir = path.join(testDir, '.agents', 'skills');
-        const skillFile = path.join(skillsDir, 'openspec-propose', 'SKILL.md');
+        const skillFile = path.join(skillsDir, 'specorbit-propose', 'SKILL.md');
         await fs.mkdir(path.dirname(skillFile), { recursive: true });
-        await fs.writeFile(skillFile, 'Next: /openspec-apply-change');
-        await fs.writeFile(path.join(skillsDir, '.openspec-target'), `${marker}\n`);
+        await fs.writeFile(skillFile, 'Next: /specorbit-apply-change');
+        await fs.writeFile(path.join(skillsDir, '.specorbit-target'), `${marker}\n`);
 
         const tools = getAvailableTools(testDir);
         expect(tools.map((tool) => tool.value)).toEqual(['agents']);
@@ -258,38 +258,38 @@ describe('available-tools', () => {
         testDir,
         '.agents',
         'skills',
-        'openspec-propose',
+        'specorbit-propose',
         'SKILL.md'
       );
       const codexSkill = path.join(
         testDir,
         '.codex',
         'skills',
-        'openspec-propose',
+        'specorbit-propose',
         'SKILL.md'
       );
       await fs.mkdir(path.dirname(agentsSkill), { recursive: true });
       await fs.mkdir(path.dirname(codexSkill), { recursive: true });
-      await fs.writeFile(agentsSkill, 'Next: /openspec-apply-change');
-      await fs.writeFile(codexSkill, 'Next: $openspec-apply-change');
+      await fs.writeFile(agentsSkill, 'Next: /specorbit-apply-change');
+      await fs.writeFile(codexSkill, 'Next: $specorbit-apply-change');
 
       const tools = getAvailableTools(testDir);
       expect(tools.map((tool) => tool.value)).toEqual(['codex']);
     });
 
     it('should detect valid legacy Codex skills beside an escaped managed link', async () => {
-      const outsideDir = await fs.mkdtemp(path.join(os.tmpdir(), 'openspec-legacy-outside-'));
+      const outsideDir = await fs.mkdtemp(path.join(os.tmpdir(), 'specorbit-legacy-outside-'));
       try {
         const legacySkills = path.join(testDir, '.codex', 'skills');
-        await fs.mkdir(path.join(legacySkills, 'openspec-propose'), { recursive: true });
+        await fs.mkdir(path.join(legacySkills, 'specorbit-propose'), { recursive: true });
         await fs.writeFile(
-          path.join(legacySkills, 'openspec-propose', 'SKILL.md'),
-          'Next: $openspec-apply-change'
+          path.join(legacySkills, 'specorbit-propose', 'SKILL.md'),
+          'Next: $specorbit-apply-change'
         );
         await fs.mkdir(outsideDir, { recursive: true });
         await fs.symlink(
           outsideDir,
-          path.join(legacySkills, 'openspec-explore'),
+          path.join(legacySkills, 'specorbit-explore'),
           process.platform === 'win32' ? 'junction' : 'dir'
         );
 
@@ -302,12 +302,12 @@ describe('available-tools', () => {
 
     it('should not let an unknown legacy skill supersede the shared agents target', async () => {
       await fs.mkdir(path.join(testDir, '.agents', 'skills'), { recursive: true });
-      await fs.writeFile(path.join(testDir, '.agents', 'skills', '.openspec-target'), 'agents\n');
+      await fs.writeFile(path.join(testDir, '.agents', 'skills', '.specorbit-target'), 'agents\n');
       const customSkill = path.join(
         testDir,
         '.codex',
         'skills',
-        'openspec-personal',
+        'specorbit-personal',
         'SKILL.md'
       );
       await fs.mkdir(path.dirname(customSkill), { recursive: true });

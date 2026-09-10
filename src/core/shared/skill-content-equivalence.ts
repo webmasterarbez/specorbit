@@ -1,8 +1,8 @@
-import { OPENSPEC_SKILL_NAMES } from '../config.js';
+import { SPECORBIT_SKILL_NAMES } from '../config.js';
 
 const GENERATED_VERSION =
   /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
-const OPENSPEC_SKILL_NAME_SET = new Set<string>(OPENSPEC_SKILL_NAMES);
+const SPECORBIT_SKILL_NAME_SET = new Set<string>(SPECORBIT_SKILL_NAMES);
 
 /**
  * Normalizes checkout line endings and a valid generated version inside the
@@ -40,9 +40,9 @@ function normalizeGeneratedSkill(content: string): string {
  */
 function toLegacyCodexReferences(content: string): string {
   return content.replace(
-    /\$(openspec-[a-z0-9-]+) \(Codex\) or \/\1 \(other agents\)/g,
+    /\$(specorbit-[a-z0-9-]+) \(Codex\) or \/\1 \(other agents\)/g,
     (match, skillName: string) =>
-      OPENSPEC_SKILL_NAME_SET.has(skillName) ? `$${skillName}` : match
+      SPECORBIT_SKILL_NAME_SET.has(skillName) ? `$${skillName}` : match
   );
 }
 

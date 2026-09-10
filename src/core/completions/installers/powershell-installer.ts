@@ -15,8 +15,8 @@ export class PowerShellInstaller {
    * Markers for PowerShell profile configuration management
    */
   private readonly PROFILE_MARKERS = {
-    start: '# OPENSPEC:START',
-    end: '# OPENSPEC:END',
+    start: '# SPECORBIT:START',
+    end: '# SPECORBIT:END',
   };
 
   constructor(homeDir: string = os.homedir()) {
@@ -120,7 +120,7 @@ export class PowerShellInstaller {
   getInstallationPath(): string {
     const profilePath = this.getProfilePath();
     const profileDir = path.dirname(profilePath);
-    return path.join(profileDir, 'OpenSpecCompletion.ps1');
+    return path.join(profileDir, 'SpecOrbitCompletion.ps1');
   }
 
   /**
@@ -166,7 +166,7 @@ export class PowerShellInstaller {
    */
   private generateProfileConfig(scriptPath: string): string {
     return [
-      '# OpenSpec shell completions configuration',
+      '# SpecOrbit shell completions configuration',
       `if (Test-Path "${scriptPath}") {`,
       `    . "${scriptPath}"`,
       '}',
@@ -228,16 +228,16 @@ export class PowerShellInstaller {
           continue; // Already configured, skip
         }
 
-        // Add OpenSpec completion configuration with markers
-        const openspecBlock = [
+        // Add SpecOrbit completion configuration with markers
+        const specorbitBlock = [
           '',
-          '# OPENSPEC:START - OpenSpec completion (managed block, do not edit manually)',
+          '# SPECORBIT:START - SpecOrbit completion (managed block, do not edit manually)',
           scriptLine,
-          '# OPENSPEC:END',
+          '# SPECORBIT:END',
           '',
         ].join('\n');
 
-        const newContent = profileContent + openspecBlock;
+        const newContent = profileContent + specorbitBlock;
         if (!(await FileSystemUtils.canWriteFile(profilePath))) {
           throw new Error(`Path is not writable: ${profilePath}`);
         }
@@ -281,13 +281,13 @@ export class PowerShellInstaller {
           continue;
         }
 
-        // Remove OPENSPEC:START -> OPENSPEC:END block
-        const startMarker = '# OPENSPEC:START';
-        const endMarker = '# OPENSPEC:END';
+        // Remove SPECORBIT:START -> SPECORBIT:END block
+        const startMarker = '# SPECORBIT:START';
+        const endMarker = '# SPECORBIT:END';
         const startIndex = profileContent.indexOf(startMarker);
 
         if (startIndex === -1) {
-          continue; // No OpenSpec block found
+          continue; // No SpecOrbit block found
         }
 
         const endIndex = profileContent.indexOf(endMarker, startIndex);
@@ -411,7 +411,7 @@ export class PowerShellInstaller {
       '',
       `To enable completions, add the following to your PowerShell profile (${profilePath}):`,
       '',
-      '  # Source OpenSpec completions',
+      '  # Source SpecOrbit completions',
       `  if (Test-Path "${installedPath}") {`,
       `      . "${installedPath}"`,
       '  }',

@@ -14,7 +14,7 @@ describe('telemetry/index', () => {
 
   beforeEach(() => {
     // Create unique temp directory for each test using UUID
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openspec-telemetry-test-'));
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'specorbit-telemetry-test-'));
 
     // Save original env
     originalEnv = { ...process.env };
@@ -54,14 +54,14 @@ describe('telemetry/index', () => {
   });
 
   function enableTelemetry() {
-    delete process.env.OPENSPEC_TELEMETRY;
+    delete process.env.SPECORBIT_TELEMETRY;
     delete process.env.DO_NOT_TRACK;
     delete process.env.CI;
   }
 
   /** Write an isolated global telemetry section for synchronous gate tests. */
   function writeTelemetryConfig(telemetry: Record<string, unknown>): void {
-    const configDir = path.join(tempDir, 'openspec');
+    const configDir = path.join(tempDir, 'specorbit');
     fs.mkdirSync(configDir, { recursive: true });
     fs.writeFileSync(
       path.join(configDir, 'config.json'),
@@ -70,8 +70,8 @@ describe('telemetry/index', () => {
   }
 
   describe('isTelemetryEnabled', () => {
-    it('should return false when OPENSPEC_TELEMETRY=0', () => {
-      process.env.OPENSPEC_TELEMETRY = '0';
+    it('should return false when SPECORBIT_TELEMETRY=0', () => {
+      process.env.SPECORBIT_TELEMETRY = '0';
       expect(isTelemetryEnabled()).toBe(false);
     });
 
@@ -107,8 +107,8 @@ describe('telemetry/index', () => {
       expect(isTelemetryEnabled()).toBe(true);
     });
 
-    it('should prioritize OPENSPEC_TELEMETRY=0 over other settings', () => {
-      process.env.OPENSPEC_TELEMETRY = '0';
+    it('should prioritize SPECORBIT_TELEMETRY=0 over other settings', () => {
+      process.env.SPECORBIT_TELEMETRY = '0';
       delete process.env.DO_NOT_TRACK;
       delete process.env.CI;
       expect(isTelemetryEnabled()).toBe(false);
@@ -135,8 +135,8 @@ describe('telemetry/index', () => {
       expect(isTelemetryEnabled()).toBe(true);
     });
 
-    it('should let OPENSPEC_TELEMETRY=0 win over telemetry.enabled true', () => {
-      process.env.OPENSPEC_TELEMETRY = '0';
+    it('should let SPECORBIT_TELEMETRY=0 win over telemetry.enabled true', () => {
+      process.env.SPECORBIT_TELEMETRY = '0';
       delete process.env.DO_NOT_TRACK;
       delete process.env.CI;
       writeTelemetryConfig({ enabled: true });
@@ -163,7 +163,7 @@ describe('telemetry/index', () => {
 
   describe('maybeShowTelemetryNotice', () => {
     it('should not show notice when telemetry is disabled', async () => {
-      process.env.OPENSPEC_TELEMETRY = '0';
+      process.env.SPECORBIT_TELEMETRY = '0';
 
       await maybeShowTelemetryNotice();
 
@@ -185,7 +185,7 @@ describe('telemetry/index', () => {
       await maybeShowTelemetryNotice();
       expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('OpenSpec collects anonymous usage stats')
+        expect.stringContaining('SpecOrbit collects anonymous usage stats')
       );
 
       // noticeSeen is now persisted: a second run stays quiet.
@@ -207,14 +207,14 @@ describe('telemetry/index', () => {
       await maybeShowTelemetryNotice();
       expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('OpenSpec collects anonymous usage stats')
+        expect.stringContaining('SpecOrbit collects anonymous usage stats')
       );
     });
   });
 
   describe('trackCommand', () => {
     it('should send nothing when telemetry is disabled', async () => {
-      process.env.OPENSPEC_TELEMETRY = '0';
+      process.env.SPECORBIT_TELEMETRY = '0';
 
       await trackCommand('test', '1.0.0');
       await shutdown();
@@ -240,7 +240,7 @@ describe('telemetry/index', () => {
 
       expect(fetchSpy).toHaveBeenCalledTimes(1);
       const [url, options] = fetchSpy.mock.calls[0] as [string, RequestInit];
-      expect(url).toBe('https://edge.openspec.dev/batch/');
+      expect(url).toBe('https://edge.specorbit.dev/batch/');
       expect(options.method).toBe('POST');
 
       const payload = JSON.parse(String(options.body));

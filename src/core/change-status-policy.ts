@@ -69,11 +69,11 @@ export function buildNextSteps(input: ChangeNextStepsInput): string[] {
 
   if (readyArtifact) {
     steps.push(
-      `Run openspec instructions ${readyArtifact.id} --change "${input.changeName}"${storeFlag} --json before writing that artifact.`
+      `Run specorbit instructions ${readyArtifact.id} --change "${input.changeName}"${storeFlag} --json before writing that artifact.`
     );
   } else if (input.allArtifactsComplete) {
     steps.push(
-      `All planning artifacts are complete. Run openspec instructions apply --change "${input.changeName}"${storeFlag} --json to inspect implementation progress.`
+      `All planning artifacts are complete. Run specorbit instructions apply --change "${input.changeName}"${storeFlag} --json to inspect implementation progress.`
     );
   }
 

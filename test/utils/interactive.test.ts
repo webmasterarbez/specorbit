@@ -9,14 +9,14 @@ import {
 } from '../../src/utils/interactive.js';
 
 describe('interactive utilities', () => {
-  let originalOpenSpecInteractive: string | undefined;
+  let originalSpecOrbitInteractive: string | undefined;
   let originalCI: string | undefined;
   let originalStdinIsTTY: boolean | undefined;
   let originalStdoutIsTTY: boolean | undefined;
 
   beforeEach(() => {
     // Save original environment
-    originalOpenSpecInteractive = process.env.OPEN_SPEC_INTERACTIVE;
+    originalSpecOrbitInteractive = process.env.OPEN_SPEC_INTERACTIVE;
     originalCI = process.env.CI;
     originalStdinIsTTY = process.stdin.isTTY;
     originalStdoutIsTTY = process.stdout.isTTY;
@@ -28,8 +28,8 @@ describe('interactive utilities', () => {
 
   afterEach(() => {
     // Restore original environment
-    if (originalOpenSpecInteractive !== undefined) {
-      process.env.OPEN_SPEC_INTERACTIVE = originalOpenSpecInteractive;
+    if (originalSpecOrbitInteractive !== undefined) {
+      process.env.OPEN_SPEC_INTERACTIVE = originalSpecOrbitInteractive;
     } else {
       delete process.env.OPEN_SPEC_INTERACTIVE;
     }

@@ -16,7 +16,7 @@ describe('artifact-graph/state', () => {
   });
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openspec-state-test-'));
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'specorbit-state-test-'));
   });
 
   afterEach(() => {

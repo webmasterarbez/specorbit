@@ -9,11 +9,11 @@ describe('validation report CLI contract', () => {
   let projectDir: string;
 
   beforeAll(async () => {
-    projectDir = await fs.mkdtemp(path.join(tmpdir(), 'openspec-findings-e2e-'));
-    await fs.mkdir(path.join(projectDir, 'openspec', 'specs'), { recursive: true });
-    await fs.writeFile(path.join(projectDir, 'openspec', 'config.yaml'), 'schema: spec-driven\n');
+    projectDir = await fs.mkdtemp(path.join(tmpdir(), 'specorbit-findings-e2e-'));
+    await fs.mkdir(path.join(projectDir, 'specorbit', 'specs'), { recursive: true });
+    await fs.writeFile(path.join(projectDir, 'specorbit', 'config.yaml'), 'schema: spec-driven\n');
     for (const [id, checkbox] of [['done', 'x'], ['unfinished', ' ']]) {
-      const dir = path.join(projectDir, 'openspec', 'changes', 'archive', id);
+      const dir = path.join(projectDir, 'specorbit', 'changes', 'archive', id);
       await fs.mkdir(dir, { recursive: true });
       await fs.writeFile(path.join(dir, 'tasks.md'), `# Tasks\n\n- [${checkbox}] 1.1 Work\n`);
     }
@@ -96,10 +96,10 @@ describe('validation report CLI contract', () => {
   });
 
   it('retains fatal archive-discovery diagnostics', async () => {
-    const malformedDir = await fs.mkdtemp(path.join(tmpdir(), 'openspec-findings-malformed-'));
+    const malformedDir = await fs.mkdtemp(path.join(tmpdir(), 'specorbit-findings-malformed-'));
     try {
-      await fs.mkdir(path.join(malformedDir, 'openspec', 'changes'), { recursive: true });
-      await fs.writeFile(path.join(malformedDir, 'openspec', 'changes', 'archive'), 'not a directory');
+      await fs.mkdir(path.join(malformedDir, 'specorbit', 'changes'), { recursive: true });
+      await fs.writeFile(path.join(malformedDir, 'specorbit', 'changes', 'archive'), 'not a directory');
       const result = await runCLI(['validate', '--archived', '--report', 'findings', '--json'], { cwd: malformedDir });
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toBe('');

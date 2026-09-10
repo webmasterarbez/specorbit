@@ -80,7 +80,7 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
     const planningHome = toPlanningHome(root);
     const projectRoot = root.path;
     const rootOutput = toRootOutput(root);
-    const newChangeHint = withStoreFlag(root, 'openspec new change <name>');
+    const newChangeHint = withStoreFlag(root, 'specorbit new change <name>');
 
     // Single definition of "load one change's status" so the batch and
     // single-change payloads can never drift apart.

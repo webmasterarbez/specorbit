@@ -1,6 +1,6 @@
-# OpenSpec Scripts
+# SpecOrbit Scripts
 
-Utility scripts for OpenSpec maintenance and development.
+Utility scripts for SpecOrbit maintenance and development.
 
 ## update-flake.sh
 

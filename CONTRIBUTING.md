@@ -1,13 +1,13 @@
 # Contributing
 
-Thanks for helping improve OpenSpec.
+Thanks for helping improve SpecOrbit.
 
 ## 1. Open a discussion or an issue first
 
 Every change starts here, including small ones.
 
-- [Start a discussion](https://github.com/Fission-AI/OpenSpec/discussions) if it affects OpenSpec's core design.
-- [Open an issue](https://github.com/Fission-AI/OpenSpec/issues) for bugs and everything else.
+- [Start a discussion](https://github.com/specorbit/specorbit/discussions) if it affects SpecOrbit's core design.
+- [Open an issue](https://github.com/specorbit/specorbit/issues) for bugs and everything else.
 
 This is so we can agree on the approach before you spend time building. PRs without a linked issue or a prior discussion may be closed.
 
@@ -15,9 +15,9 @@ This is so we can agree on the approach before you spend time building. PRs with
 
 A bug fix, a typo, or a small improvement goes straight to a PR.
 
-A new feature, a significant refactor, or anything that changes OpenSpec's architecture needs an OpenSpec change proposal first, so we can align on intent and goals before implementation begins. Open it as a PR containing only `openspec/changes/<name>/` and wait for it to be approved before you write the code.
+A new feature, a significant refactor, or anything that changes SpecOrbit's architecture needs an SpecOrbit change proposal first, so we can align on intent and goals before implementation begins. Open it as a PR containing only `specorbit/changes/<name>/` and wait for it to be approved before you write the code.
 
-When writing a proposal, keep the OpenSpec philosophy in mind: we serve a wide variety of users across different coding agents, models, and use cases. Changes should work well for everyone.
+When writing a proposal, keep the SpecOrbit philosophy in mind: we serve a wide variety of users across different coding agents, models, and use cases. Changes should work well for everyone.
 
 If you are not sure which side of the line your change falls on, ask in the discussion or issue from step 1.
 

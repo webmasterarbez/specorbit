@@ -8,8 +8,8 @@ import {
   detectLegacySlashCommands,
   detectLegacyStructureFiles,
   getCodexPromptDir,
-  hasOpenSpecMarkers,
-  isOnlyOpenSpecContent,
+  hasSpecOrbitMarkers,
+  isOnlySpecOrbitContent,
   removeMarkerBlock,
   cleanupLegacyArtifacts,
   formatDeferredGlobalPromptSummary,
@@ -22,7 +22,7 @@ import {
   LEGACY_GLOBAL_SLASH_COMMAND_PATHS,
   LEGACY_SLASH_COMMAND_PATHS,
 } from '../../src/core/legacy-cleanup.js';
-import { OPENSPEC_MARKERS } from '../../src/core/config.js';
+import { SPECORBIT_MARKERS } from '../../src/core/config.js';
 import { CommandAdapterRegistry } from '../../src/core/command-generation/registry.js';
 import { resolveCommandSurfaceCapability } from '../../src/core/command-surface.js';
 import { ALL_WORKFLOWS } from '../../src/core/profiles.js';
@@ -33,10 +33,10 @@ describe('legacy-cleanup', () => {
 
   beforeEach(async () => {
     originalEnv = { ...process.env };
-    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'openspec-legacy-test-'));
+    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'specorbit-legacy-test-'));
     process.env.CODEX_HOME = path.join(testDir, 'codex-home');
-    // Create openspec directory structure
-    await fs.mkdir(path.join(testDir, 'openspec'), { recursive: true });
+    // Create specorbit directory structure
+    await fs.mkdir(path.join(testDir, 'specorbit'), { recursive: true });
   });
 
   afterEach(async () => {
@@ -44,100 +44,100 @@ describe('legacy-cleanup', () => {
     await fs.rm(testDir, { recursive: true, force: true });
   });
 
-  describe('hasOpenSpecMarkers', () => {
+  describe('hasSpecOrbitMarkers', () => {
     it('should return true when both markers are present', () => {
       const content = `Some content
-${OPENSPEC_MARKERS.start}
-OpenSpec content
-${OPENSPEC_MARKERS.end}
+${SPECORBIT_MARKERS.start}
+SpecOrbit content
+${SPECORBIT_MARKERS.end}
 More content`;
-      expect(hasOpenSpecMarkers(content)).toBe(true);
+      expect(hasSpecOrbitMarkers(content)).toBe(true);
     });
 
     it('should return false when start marker is missing', () => {
       const content = `Some content
-OpenSpec content
-${OPENSPEC_MARKERS.end}`;
-      expect(hasOpenSpecMarkers(content)).toBe(false);
+SpecOrbit content
+${SPECORBIT_MARKERS.end}`;
+      expect(hasSpecOrbitMarkers(content)).toBe(false);
     });
 
     it('should return false when end marker is missing', () => {
-      const content = `${OPENSPEC_MARKERS.start}
-OpenSpec content
+      const content = `${SPECORBIT_MARKERS.start}
+SpecOrbit content
 Some content`;
-      expect(hasOpenSpecMarkers(content)).toBe(false);
+      expect(hasSpecOrbitMarkers(content)).toBe(false);
     });
 
     it('should return false when no markers are present', () => {
       const content = 'Plain content without markers';
-      expect(hasOpenSpecMarkers(content)).toBe(false);
+      expect(hasSpecOrbitMarkers(content)).toBe(false);
     });
   });
 
-  describe('isOnlyOpenSpecContent', () => {
+  describe('isOnlySpecOrbitContent', () => {
     it('should return true when content is only markers and whitespace outside', () => {
-      const content = `${OPENSPEC_MARKERS.start}
-OpenSpec content here
-${OPENSPEC_MARKERS.end}`;
-      expect(isOnlyOpenSpecContent(content)).toBe(true);
+      const content = `${SPECORBIT_MARKERS.start}
+SpecOrbit content here
+${SPECORBIT_MARKERS.end}`;
+      expect(isOnlySpecOrbitContent(content)).toBe(true);
     });
 
     it('should return true with whitespace before and after markers', () => {
       const content = `
 
-${OPENSPEC_MARKERS.start}
-OpenSpec content
-${OPENSPEC_MARKERS.end}
+${SPECORBIT_MARKERS.start}
+SpecOrbit content
+${SPECORBIT_MARKERS.end}
 
 `;
-      expect(isOnlyOpenSpecContent(content)).toBe(true);
+      expect(isOnlySpecOrbitContent(content)).toBe(true);
     });
 
     it('should return false when content exists before markers', () => {
       const content = `User content here
-${OPENSPEC_MARKERS.start}
-OpenSpec content
-${OPENSPEC_MARKERS.end}`;
-      expect(isOnlyOpenSpecContent(content)).toBe(false);
+${SPECORBIT_MARKERS.start}
+SpecOrbit content
+${SPECORBIT_MARKERS.end}`;
+      expect(isOnlySpecOrbitContent(content)).toBe(false);
     });
 
     it('should return false when content exists after markers', () => {
-      const content = `${OPENSPEC_MARKERS.start}
-OpenSpec content
-${OPENSPEC_MARKERS.end}
+      const content = `${SPECORBIT_MARKERS.start}
+SpecOrbit content
+${SPECORBIT_MARKERS.end}
 User content here`;
-      expect(isOnlyOpenSpecContent(content)).toBe(false);
+      expect(isOnlySpecOrbitContent(content)).toBe(false);
     });
 
     it('should return false when markers are missing', () => {
       const content = 'Plain content without markers';
-      expect(isOnlyOpenSpecContent(content)).toBe(false);
+      expect(isOnlySpecOrbitContent(content)).toBe(false);
     });
 
     it('should return false when end marker comes before start marker', () => {
-      const content = `${OPENSPEC_MARKERS.end}
+      const content = `${SPECORBIT_MARKERS.end}
 Content
-${OPENSPEC_MARKERS.start}`;
-      expect(isOnlyOpenSpecContent(content)).toBe(false);
+${SPECORBIT_MARKERS.start}`;
+      expect(isOnlySpecOrbitContent(content)).toBe(false);
     });
   });
 
   describe('removeMarkerBlock', () => {
     it('should remove marker block and preserve content before', () => {
       const content = `User content before
-${OPENSPEC_MARKERS.start}
-OpenSpec content
-${OPENSPEC_MARKERS.end}`;
+${SPECORBIT_MARKERS.start}
+SpecOrbit content
+${SPECORBIT_MARKERS.end}`;
       const result = removeMarkerBlock(content);
       expect(result).toBe('User content before\n');
-      expect(result).not.toContain(OPENSPEC_MARKERS.start);
-      expect(result).not.toContain(OPENSPEC_MARKERS.end);
+      expect(result).not.toContain(SPECORBIT_MARKERS.start);
+      expect(result).not.toContain(SPECORBIT_MARKERS.end);
     });
 
     it('should remove marker block and preserve content after', () => {
-      const content = `${OPENSPEC_MARKERS.start}
-OpenSpec content
-${OPENSPEC_MARKERS.end}
+      const content = `${SPECORBIT_MARKERS.start}
+SpecOrbit content
+${SPECORBIT_MARKERS.end}
 User content after`;
       const result = removeMarkerBlock(content);
       expect(result).toBe('User content after\n');
@@ -145,23 +145,23 @@ User content after`;
 
     it('should remove marker block and preserve content before and after', () => {
       const content = `User content before
-${OPENSPEC_MARKERS.start}
-OpenSpec content
-${OPENSPEC_MARKERS.end}
+${SPECORBIT_MARKERS.start}
+SpecOrbit content
+${SPECORBIT_MARKERS.end}
 User content after`;
       const result = removeMarkerBlock(content);
       expect(result).toContain('User content before');
       expect(result).toContain('User content after');
-      expect(result).not.toContain(OPENSPEC_MARKERS.start);
+      expect(result).not.toContain(SPECORBIT_MARKERS.start);
     });
 
     it('should clean up double blank lines', () => {
       const content = `Line 1
 
 
-${OPENSPEC_MARKERS.start}
-OpenSpec content
-${OPENSPEC_MARKERS.end}
+${SPECORBIT_MARKERS.start}
+SpecOrbit content
+${SPECORBIT_MARKERS.end}
 
 
 Line 2`;
@@ -170,9 +170,9 @@ Line 2`;
     });
 
     it('should return empty string when only markers remain', () => {
-      const content = `${OPENSPEC_MARKERS.start}
-OpenSpec content
-${OPENSPEC_MARKERS.end}`;
+      const content = `${SPECORBIT_MARKERS.start}
+SpecOrbit content
+${SPECORBIT_MARKERS.end}`;
       const result = removeMarkerBlock(content);
       expect(result).toBe('');
     });
@@ -185,26 +185,26 @@ ${OPENSPEC_MARKERS.end}`;
     });
 
     it('should return original content when markers are in wrong order', () => {
-      const content = `${OPENSPEC_MARKERS.end}
+      const content = `${SPECORBIT_MARKERS.end}
 Content
-${OPENSPEC_MARKERS.start}`;
+${SPECORBIT_MARKERS.start}`;
       const result = removeMarkerBlock(content);
-      expect(result).toContain(OPENSPEC_MARKERS.end);
-      expect(result).toContain(OPENSPEC_MARKERS.start);
+      expect(result).toContain(SPECORBIT_MARKERS.end);
+      expect(result).toContain(SPECORBIT_MARKERS.start);
     });
 
     it('should ignore inline mentions of markers and only remove actual block', () => {
-      const content = `Intro referencing ${OPENSPEC_MARKERS.start} and ${OPENSPEC_MARKERS.end} inline.
+      const content = `Intro referencing ${SPECORBIT_MARKERS.start} and ${SPECORBIT_MARKERS.end} inline.
 
-${OPENSPEC_MARKERS.start}
+${SPECORBIT_MARKERS.start}
 Managed content here
-${OPENSPEC_MARKERS.end}
+${SPECORBIT_MARKERS.end}
 After content`;
       const result = removeMarkerBlock(content);
       // Inline mentions preserved
       expect(result).toContain('Intro referencing');
-      expect(result).toContain(OPENSPEC_MARKERS.start);
-      expect(result).toContain(OPENSPEC_MARKERS.end);
+      expect(result).toContain(SPECORBIT_MARKERS.start);
+      expect(result).toContain(SPECORBIT_MARKERS.end);
       // Managed content removed
       expect(result).not.toContain('Managed content here');
       expect(result).toContain('After content');
@@ -212,11 +212,11 @@ After content`;
   });
 
   describe('detectLegacyConfigFiles', () => {
-    it('should detect CLAUDE.md with OpenSpec markers and put in update list', async () => {
+    it('should detect CLAUDE.md with SpecOrbit markers and put in update list', async () => {
       const claudePath = path.join(testDir, 'CLAUDE.md');
-      await fs.writeFile(claudePath, `${OPENSPEC_MARKERS.start}
-OpenSpec content
-${OPENSPEC_MARKERS.end}`);
+      await fs.writeFile(claudePath, `${SPECORBIT_MARKERS.start}
+SpecOrbit content
+${SPECORBIT_MARKERS.end}`);
 
       const result = await detectLegacyConfigFiles(testDir);
       expect(result.allFiles).toContain('CLAUDE.md');
@@ -227,16 +227,16 @@ ${OPENSPEC_MARKERS.end}`);
     it('should detect files with mixed content and put in update list', async () => {
       const claudePath = path.join(testDir, 'CLAUDE.md');
       await fs.writeFile(claudePath, `User instructions here
-${OPENSPEC_MARKERS.start}
-OpenSpec content
-${OPENSPEC_MARKERS.end}`);
+${SPECORBIT_MARKERS.start}
+SpecOrbit content
+${SPECORBIT_MARKERS.end}`);
 
       const result = await detectLegacyConfigFiles(testDir);
       expect(result.allFiles).toContain('CLAUDE.md');
       expect(result.filesToUpdate).toContain('CLAUDE.md');
     });
 
-    it('should not detect files without OpenSpec markers', async () => {
+    it('should not detect files without SpecOrbit markers', async () => {
       const claudePath = path.join(testDir, 'CLAUDE.md');
       await fs.writeFile(claudePath, 'Plain instructions without markers');
 
@@ -246,9 +246,9 @@ ${OPENSPEC_MARKERS.end}`);
 
     it('should detect multiple config files', async () => {
       // Create multiple config files with markers
-      await fs.writeFile(path.join(testDir, 'CLAUDE.md'), `${OPENSPEC_MARKERS.start}\nContent\n${OPENSPEC_MARKERS.end}`);
-      await fs.writeFile(path.join(testDir, 'CLINE.md'), `${OPENSPEC_MARKERS.start}\nContent\n${OPENSPEC_MARKERS.end}`);
-      await fs.writeFile(path.join(testDir, 'QODER.md'), `${OPENSPEC_MARKERS.start}\nContent\n${OPENSPEC_MARKERS.end}`);
+      await fs.writeFile(path.join(testDir, 'CLAUDE.md'), `${SPECORBIT_MARKERS.start}\nContent\n${SPECORBIT_MARKERS.end}`);
+      await fs.writeFile(path.join(testDir, 'CLINE.md'), `${SPECORBIT_MARKERS.start}\nContent\n${SPECORBIT_MARKERS.end}`);
+      await fs.writeFile(path.join(testDir, 'QODER.md'), `${SPECORBIT_MARKERS.start}\nContent\n${SPECORBIT_MARKERS.end}`);
 
       const result = await detectLegacyConfigFiles(testDir);
       expect(result.allFiles).toHaveLength(3);
@@ -268,50 +268,50 @@ ${OPENSPEC_MARKERS.end}`);
 
   describe('detectLegacySlashCommands', () => {
     it('should detect legacy Claude slash command directory', async () => {
-      const dirPath = path.join(testDir, '.claude', 'commands', 'openspec');
+      const dirPath = path.join(testDir, '.claude', 'commands', 'specorbit');
       await fs.mkdir(dirPath, { recursive: true });
       await fs.writeFile(path.join(dirPath, 'proposal.md'), 'content');
 
       const result = await detectLegacySlashCommands(testDir);
-      expect(result.directories).toContain('.claude/commands/openspec');
+      expect(result.directories).toContain('.claude/commands/specorbit');
     });
 
     it('should detect legacy Cursor slash command files', async () => {
       const dirPath = path.join(testDir, '.cursor', 'commands');
       await fs.mkdir(dirPath, { recursive: true });
-      await fs.writeFile(path.join(dirPath, 'openspec-proposal.md'), 'content');
-      await fs.writeFile(path.join(dirPath, 'openspec-apply.md'), 'content');
+      await fs.writeFile(path.join(dirPath, 'specorbit-proposal.md'), 'content');
+      await fs.writeFile(path.join(dirPath, 'specorbit-apply.md'), 'content');
 
       const result = await detectLegacySlashCommands(testDir);
-      expect(result.files).toContain('.cursor/commands/openspec-proposal.md');
-      expect(result.files).toContain('.cursor/commands/openspec-apply.md');
+      expect(result.files).toContain('.cursor/commands/specorbit-proposal.md');
+      expect(result.files).toContain('.cursor/commands/specorbit-apply.md');
     });
 
     it('should detect legacy Windsurf workflow files', async () => {
       const dirPath = path.join(testDir, '.windsurf', 'workflows');
       await fs.mkdir(dirPath, { recursive: true });
-      await fs.writeFile(path.join(dirPath, 'openspec-archive.md'), 'content');
+      await fs.writeFile(path.join(dirPath, 'specorbit-archive.md'), 'content');
 
       const result = await detectLegacySlashCommands(testDir);
-      expect(result.files).toContain('.windsurf/workflows/openspec-archive.md');
+      expect(result.files).toContain('.windsurf/workflows/specorbit-archive.md');
     });
 
     it('should detect multiple tool directories and files', async () => {
       // Create directory-based
-      await fs.mkdir(path.join(testDir, '.claude', 'commands', 'openspec'), { recursive: true });
-      await fs.mkdir(path.join(testDir, '.qoder', 'commands', 'openspec'), { recursive: true });
+      await fs.mkdir(path.join(testDir, '.claude', 'commands', 'specorbit'), { recursive: true });
+      await fs.mkdir(path.join(testDir, '.qoder', 'commands', 'specorbit'), { recursive: true });
 
       // Create file-based
       await fs.mkdir(path.join(testDir, '.cursor', 'commands'), { recursive: true });
-      await fs.writeFile(path.join(testDir, '.cursor', 'commands', 'openspec-proposal.md'), 'content');
+      await fs.writeFile(path.join(testDir, '.cursor', 'commands', 'specorbit-proposal.md'), 'content');
 
       const result = await detectLegacySlashCommands(testDir);
-      expect(result.directories).toContain('.claude/commands/openspec');
-      expect(result.directories).toContain('.qoder/commands/openspec');
-      expect(result.files).toContain('.cursor/commands/openspec-proposal.md');
+      expect(result.directories).toContain('.claude/commands/specorbit');
+      expect(result.directories).toContain('.qoder/commands/specorbit');
+      expect(result.files).toContain('.cursor/commands/specorbit-proposal.md');
     });
 
-    it('should not detect non-openspec files', async () => {
+    it('should not detect non-specorbit files', async () => {
       const dirPath = path.join(testDir, '.cursor', 'commands');
       await fs.mkdir(dirPath, { recursive: true });
       await fs.writeFile(path.join(dirPath, 'other-command.md'), 'content');
@@ -329,80 +329,80 @@ ${OPENSPEC_MARKERS.end}`);
     it('should detect TOML-based slash commands for Qwen', async () => {
       const dirPath = path.join(testDir, '.qwen', 'commands');
       await fs.mkdir(dirPath, { recursive: true });
-      await fs.writeFile(path.join(dirPath, 'openspec-proposal.toml'), 'content');
+      await fs.writeFile(path.join(dirPath, 'specorbit-proposal.toml'), 'content');
 
       const result = await detectLegacySlashCommands(testDir);
-      expect(result.files).toContain('.qwen/commands/openspec-proposal.toml');
+      expect(result.files).toContain('.qwen/commands/specorbit-proposal.toml');
     });
 
-    it('should detect deprecated opsx TOML commands for Qwen', async () => {
+    it('should detect deprecated orbit TOML commands for Qwen', async () => {
       const dirPath = path.join(testDir, '.qwen', 'commands');
       await fs.mkdir(dirPath, { recursive: true });
-      await fs.writeFile(path.join(dirPath, 'opsx-explore.toml'), 'content');
+      await fs.writeFile(path.join(dirPath, 'orbit-explore.toml'), 'content');
 
       const result = await detectLegacySlashCommands(testDir);
-      expect(result.files).toContain('.qwen/commands/opsx-explore.toml');
+      expect(result.files).toContain('.qwen/commands/orbit-explore.toml');
     });
 
     it('should not detect new Markdown commands for Qwen as legacy', async () => {
       const dirPath = path.join(testDir, '.qwen', 'commands');
       await fs.mkdir(dirPath, { recursive: true });
-      await fs.writeFile(path.join(dirPath, 'opsx-explore.md'), 'content');
+      await fs.writeFile(path.join(dirPath, 'orbit-explore.md'), 'content');
 
       const result = await detectLegacySlashCommands(testDir);
-      expect(result.files).not.toContain('.qwen/commands/opsx-explore.md');
+      expect(result.files).not.toContain('.qwen/commands/orbit-explore.md');
     });
 
     it('should detect Continue prompt files', async () => {
       const dirPath = path.join(testDir, '.continue', 'prompts');
       await fs.mkdir(dirPath, { recursive: true });
-      await fs.writeFile(path.join(dirPath, 'openspec-apply.prompt'), 'content');
+      await fs.writeFile(path.join(dirPath, 'specorbit-apply.prompt'), 'content');
 
       const result = await detectLegacySlashCommands(testDir);
-      expect(result.files).toContain('.continue/prompts/openspec-apply.prompt');
+      expect(result.files).toContain('.continue/prompts/specorbit-apply.prompt');
     });
 
-    it('should detect legacy OpenCode opsx-* command files', async () => {
+    it('should detect legacy OpenCode orbit-* command files', async () => {
       const dirPath = path.join(testDir, '.opencode', 'command');
       await fs.mkdir(dirPath, { recursive: true });
-      await fs.writeFile(path.join(dirPath, 'opsx-propose.md'), 'content');
+      await fs.writeFile(path.join(dirPath, 'orbit-propose.md'), 'content');
 
       const result = await detectLegacySlashCommands(testDir);
-      expect(result.files).toContain('.opencode/command/opsx-propose.md');
+      expect(result.files).toContain('.opencode/command/orbit-propose.md');
     });
 
-    it('should detect legacy OpenCode openspec-* command files', async () => {
+    it('should detect legacy OpenCode specorbit-* command files', async () => {
       const dirPath = path.join(testDir, '.opencode', 'command');
       await fs.mkdir(dirPath, { recursive: true });
-      await fs.writeFile(path.join(dirPath, 'openspec-new.md'), 'content');
+      await fs.writeFile(path.join(dirPath, 'specorbit-new.md'), 'content');
 
       const result = await detectLegacySlashCommands(testDir);
-      expect(result.files).toContain('.opencode/command/openspec-new.md');
+      expect(result.files).toContain('.opencode/command/specorbit-new.md');
     });
 
-    it('should detect both opsx-* and openspec-* OpenCode command files', async () => {
+    it('should detect both orbit-* and specorbit-* OpenCode command files', async () => {
       const dirPath = path.join(testDir, '.opencode', 'command');
       await fs.mkdir(dirPath, { recursive: true });
-      await fs.writeFile(path.join(dirPath, 'opsx-propose.md'), 'content');
-      await fs.writeFile(path.join(dirPath, 'openspec-new.md'), 'content');
+      await fs.writeFile(path.join(dirPath, 'orbit-propose.md'), 'content');
+      await fs.writeFile(path.join(dirPath, 'specorbit-new.md'), 'content');
 
       const result = await detectLegacySlashCommands(testDir);
-      expect(result.files).toContain('.opencode/command/opsx-propose.md');
-      expect(result.files).toContain('.opencode/command/openspec-new.md');
+      expect(result.files).toContain('.opencode/command/orbit-propose.md');
+      expect(result.files).toContain('.opencode/command/specorbit-new.md');
     });
 
     it('should detect legacy CoStrict command files without claiming their directory', async () => {
-      const dirPath = path.join(testDir, '.cospec', 'openspec', 'commands');
+      const dirPath = path.join(testDir, '.cospec', 'specorbit', 'commands');
       await fs.mkdir(dirPath, { recursive: true });
-      await fs.writeFile(path.join(dirPath, 'openspec-proposal.md'), 'content');
-      await fs.writeFile(path.join(dirPath, 'openspec-apply.md'), 'content');
-      await fs.writeFile(path.join(dirPath, 'openspec-archive.md'), 'content');
+      await fs.writeFile(path.join(dirPath, 'specorbit-proposal.md'), 'content');
+      await fs.writeFile(path.join(dirPath, 'specorbit-apply.md'), 'content');
+      await fs.writeFile(path.join(dirPath, 'specorbit-archive.md'), 'content');
 
       const result = await detectLegacySlashCommands(testDir);
-      expect(result.files).toContain('.cospec/openspec/commands/openspec-proposal.md');
-      expect(result.files).toContain('.cospec/openspec/commands/openspec-apply.md');
-      expect(result.files).toContain('.cospec/openspec/commands/openspec-archive.md');
-      expect(result.directories).not.toContain('.cospec/openspec/commands');
+      expect(result.files).toContain('.cospec/specorbit/commands/specorbit-proposal.md');
+      expect(result.files).toContain('.cospec/specorbit/commands/specorbit-apply.md');
+      expect(result.files).toContain('.cospec/specorbit/commands/specorbit-archive.md');
+      expect(result.directories).not.toContain('.cospec/specorbit/commands');
     });
 
     it('should not report any file a current command adapter writes as a legacy artifact', async () => {
@@ -432,40 +432,40 @@ ${OPENSPEC_MARKERS.end}`);
     it('should not include managed global Codex prompt files in repo-local slash command detection', async () => {
       const promptDir = getCodexPromptDir();
       await fs.mkdir(promptDir, { recursive: true });
-      await fs.writeFile(path.join(promptDir, 'opsx-explore.md'), 'legacy explore prompt');
-      await fs.writeFile(path.join(promptDir, 'openspec-proposal.md'), 'managed');
+      await fs.writeFile(path.join(promptDir, 'orbit-explore.md'), 'legacy explore prompt');
+      await fs.writeFile(path.join(promptDir, 'specorbit-proposal.md'), 'managed');
       await fs.writeFile(path.join(promptDir, 'my-custom-prompt.md'), 'user');
 
       const result = await detectLegacySlashCommands(testDir);
 
-      expect(result.files).not.toContain(path.join(promptDir, 'opsx-explore.md'));
-      expect(result.files).not.toContain(path.join(promptDir, 'openspec-proposal.md'));
+      expect(result.files).not.toContain(path.join(promptDir, 'orbit-explore.md'));
+      expect(result.files).not.toContain(path.join(promptDir, 'specorbit-proposal.md'));
       expect(result.files).not.toContain(path.join(promptDir, 'my-custom-prompt.md'));
     });
   });
 
   describe('detectLegacyStructureFiles', () => {
-    it('should detect openspec/AGENTS.md', async () => {
-      const agentsPath = path.join(testDir, 'openspec', 'AGENTS.md');
+    it('should detect specorbit/AGENTS.md', async () => {
+      const agentsPath = path.join(testDir, 'specorbit', 'AGENTS.md');
       await fs.writeFile(agentsPath, '# AGENTS.md content');
 
       const result = await detectLegacyStructureFiles(testDir);
-      expect(result.hasOpenspecAgents).toBe(true);
+      expect(result.hasSpecorbitAgents).toBe(true);
     });
 
-    it('should detect openspec/project.md', async () => {
-      const projectPath = path.join(testDir, 'openspec', 'project.md');
+    it('should detect specorbit/project.md', async () => {
+      const projectPath = path.join(testDir, 'specorbit', 'project.md');
       await fs.writeFile(projectPath, '# Project content');
 
       const result = await detectLegacyStructureFiles(testDir);
       expect(result.hasProjectMd).toBe(true);
     });
 
-    it('should detect root AGENTS.md with OpenSpec markers', async () => {
+    it('should detect root AGENTS.md with SpecOrbit markers', async () => {
       const agentsPath = path.join(testDir, 'AGENTS.md');
-      await fs.writeFile(agentsPath, `${OPENSPEC_MARKERS.start}
-OpenSpec content
-${OPENSPEC_MARKERS.end}`);
+      await fs.writeFile(agentsPath, `${SPECORBIT_MARKERS.start}
+SpecOrbit content
+${SPECORBIT_MARKERS.end}`);
 
       const result = await detectLegacyStructureFiles(testDir);
       expect(result.hasRootAgentsWithMarkers).toBe(true);
@@ -481,7 +481,7 @@ ${OPENSPEC_MARKERS.end}`);
 
     it('should handle non-existent files gracefully', async () => {
       const result = await detectLegacyStructureFiles(testDir);
-      expect(result.hasOpenspecAgents).toBe(false);
+      expect(result.hasSpecorbitAgents).toBe(false);
       expect(result.hasProjectMd).toBe(false);
       expect(result.hasRootAgentsWithMarkers).toBe(false);
     });
@@ -494,7 +494,7 @@ ${OPENSPEC_MARKERS.end}`);
     });
 
     it('should return hasLegacyArtifacts: true when config files are found', async () => {
-      await fs.writeFile(path.join(testDir, 'CLAUDE.md'), `${OPENSPEC_MARKERS.start}\nContent\n${OPENSPEC_MARKERS.end}`);
+      await fs.writeFile(path.join(testDir, 'CLAUDE.md'), `${SPECORBIT_MARKERS.start}\nContent\n${SPECORBIT_MARKERS.end}`);
 
       const result = await detectLegacyArtifacts(testDir);
       expect(result.hasLegacyArtifacts).toBe(true);
@@ -502,23 +502,23 @@ ${OPENSPEC_MARKERS.end}`);
     });
 
     it('should return hasLegacyArtifacts: true when slash commands are found', async () => {
-      await fs.mkdir(path.join(testDir, '.claude', 'commands', 'openspec'), { recursive: true });
+      await fs.mkdir(path.join(testDir, '.claude', 'commands', 'specorbit'), { recursive: true });
 
       const result = await detectLegacyArtifacts(testDir);
       expect(result.hasLegacyArtifacts).toBe(true);
-      expect(result.slashCommandDirs).toContain('.claude/commands/openspec');
+      expect(result.slashCommandDirs).toContain('.claude/commands/specorbit');
     });
 
-    it('should return hasLegacyArtifacts: true when openspec/AGENTS.md is found', async () => {
-      await fs.writeFile(path.join(testDir, 'openspec', 'AGENTS.md'), 'content');
+    it('should return hasLegacyArtifacts: true when specorbit/AGENTS.md is found', async () => {
+      await fs.writeFile(path.join(testDir, 'specorbit', 'AGENTS.md'), 'content');
 
       const result = await detectLegacyArtifacts(testDir);
       expect(result.hasLegacyArtifacts).toBe(true);
-      expect(result.hasOpenspecAgents).toBe(true);
+      expect(result.hasSpecorbitAgents).toBe(true);
     });
 
     it('should detect project.md for migration hint (it is preserved, not deleted)', async () => {
-      await fs.writeFile(path.join(testDir, 'openspec', 'project.md'), 'content');
+      await fs.writeFile(path.join(testDir, 'specorbit', 'project.md'), 'content');
 
       const result = await detectLegacyArtifacts(testDir);
       // project.md triggers hasLegacyArtifacts to show migration hint
@@ -528,56 +528,56 @@ ${OPENSPEC_MARKERS.end}`);
 
     it('should combine all detection results', async () => {
       // Create various legacy artifacts
-      await fs.writeFile(path.join(testDir, 'CLAUDE.md'), `${OPENSPEC_MARKERS.start}\nContent\n${OPENSPEC_MARKERS.end}`);
-      await fs.mkdir(path.join(testDir, '.claude', 'commands', 'openspec'), { recursive: true });
-      await fs.writeFile(path.join(testDir, 'openspec', 'AGENTS.md'), 'content');
-      await fs.writeFile(path.join(testDir, 'openspec', 'project.md'), 'content');
+      await fs.writeFile(path.join(testDir, 'CLAUDE.md'), `${SPECORBIT_MARKERS.start}\nContent\n${SPECORBIT_MARKERS.end}`);
+      await fs.mkdir(path.join(testDir, '.claude', 'commands', 'specorbit'), { recursive: true });
+      await fs.writeFile(path.join(testDir, 'specorbit', 'AGENTS.md'), 'content');
+      await fs.writeFile(path.join(testDir, 'specorbit', 'project.md'), 'content');
 
       const result = await detectLegacyArtifacts(testDir);
       expect(result.hasLegacyArtifacts).toBe(true);
       expect(result.configFiles).toContain('CLAUDE.md');
-      expect(result.slashCommandDirs).toContain('.claude/commands/openspec');
-      expect(result.hasOpenspecAgents).toBe(true);
+      expect(result.slashCommandDirs).toContain('.claude/commands/specorbit');
+      expect(result.hasSpecorbitAgents).toBe(true);
       expect(result.hasProjectMd).toBe(true);
     });
 
     it('should detect allowlisted global Codex prompts separately from repo-local slash commands', async () => {
       const promptDir = getCodexPromptDir();
       await fs.mkdir(promptDir, { recursive: true });
-      await fs.writeFile(path.join(promptDir, 'opsx-explore.md'), 'prompt generated by an older OpenSpec version');
-      await fs.writeFile(path.join(promptDir, 'opsx-update.md'), 'legacy update prompt');
-      await fs.writeFile(path.join(promptDir, 'opsx-review.md'), 'user');
-      await fs.writeFile(path.join(promptDir, 'openspec-proposal.md'), 'managed');
+      await fs.writeFile(path.join(promptDir, 'orbit-explore.md'), 'prompt generated by an older SpecOrbit version');
+      await fs.writeFile(path.join(promptDir, 'orbit-update.md'), 'legacy update prompt');
+      await fs.writeFile(path.join(promptDir, 'orbit-review.md'), 'user');
+      await fs.writeFile(path.join(promptDir, 'specorbit-proposal.md'), 'managed');
       await fs.writeFile(path.join(promptDir, 'my-custom-prompt.md'), 'user');
 
       const result = await detectLegacyArtifacts(testDir);
 
-      expect(result.globalSlashCommandFiles).toContain(path.join(promptDir, 'opsx-explore.md'));
-      expect(result.globalSlashCommandFiles).toContain(path.join(promptDir, 'opsx-update.md'));
-      expect(result.globalSlashCommandFiles).not.toContain(path.join(promptDir, 'opsx-review.md'));
-      expect(result.globalSlashCommandFiles).not.toContain(path.join(promptDir, 'openspec-proposal.md'));
+      expect(result.globalSlashCommandFiles).toContain(path.join(promptDir, 'orbit-explore.md'));
+      expect(result.globalSlashCommandFiles).toContain(path.join(promptDir, 'orbit-update.md'));
+      expect(result.globalSlashCommandFiles).not.toContain(path.join(promptDir, 'orbit-review.md'));
+      expect(result.globalSlashCommandFiles).not.toContain(path.join(promptDir, 'specorbit-proposal.md'));
       expect(result.globalSlashCommandFiles).not.toContain(path.join(promptDir, 'my-custom-prompt.md'));
-      expect(result.slashCommandFiles).not.toContain(path.join(promptDir, 'opsx-explore.md'));
+      expect(result.slashCommandFiles).not.toContain(path.join(promptDir, 'orbit-explore.md'));
     });
 
     it('should detect exact allowlisted global Codex filenames regardless of template revision', async () => {
       const promptDir = getCodexPromptDir();
       await fs.mkdir(promptDir, { recursive: true });
       await fs.writeFile(
-        path.join(promptDir, 'opsx-explore.md'),
-        '# custom explore prompt\n\nThis is not an OpenSpec generated Codex prompt.\n'
+        path.join(promptDir, 'orbit-explore.md'),
+        '# custom explore prompt\n\nThis is not a SpecOrbit generated Codex prompt.\n'
       );
 
       const result = await detectLegacyArtifacts(testDir);
 
-      expect(result.globalSlashCommandFiles).toContain(path.join(promptDir, 'opsx-explore.md'));
+      expect(result.globalSlashCommandFiles).toContain(path.join(promptDir, 'orbit-explore.md'));
     });
   });
 
   describe('cleanupLegacyArtifacts', () => {
-    it('should remove markers from config files that have only OpenSpec content (never delete)', async () => {
+    it('should remove markers from config files that have only SpecOrbit content (never delete)', async () => {
       const claudePath = path.join(testDir, 'CLAUDE.md');
-      await fs.writeFile(claudePath, `${OPENSPEC_MARKERS.start}\nContent\n${OPENSPEC_MARKERS.end}`);
+      await fs.writeFile(claudePath, `${SPECORBIT_MARKERS.start}\nContent\n${SPECORBIT_MARKERS.end}`);
 
       const detection = await detectLegacyArtifacts(testDir);
       const result = await cleanupLegacyArtifacts(testDir, detection);
@@ -589,16 +589,16 @@ ${OPENSPEC_MARKERS.end}`);
       await expect(fs.access(claudePath)).resolves.not.toThrow();
       // File should be empty or have markers removed
       const content = await fs.readFile(claudePath, 'utf-8');
-      expect(content).not.toContain(OPENSPEC_MARKERS.start);
-      expect(content).not.toContain(OPENSPEC_MARKERS.end);
+      expect(content).not.toContain(SPECORBIT_MARKERS.start);
+      expect(content).not.toContain(SPECORBIT_MARKERS.end);
     });
 
     it('should remove marker block from files with mixed content', async () => {
       const claudePath = path.join(testDir, 'CLAUDE.md');
       await fs.writeFile(claudePath, `User instructions
-${OPENSPEC_MARKERS.start}
-OpenSpec content
-${OPENSPEC_MARKERS.end}`);
+${SPECORBIT_MARKERS.start}
+SpecOrbit content
+${SPECORBIT_MARKERS.end}`);
 
       const detection = await detectLegacyArtifacts(testDir);
       const result = await cleanupLegacyArtifacts(testDir, detection);
@@ -606,18 +606,18 @@ ${OPENSPEC_MARKERS.end}`);
       expect(result.modifiedFiles).toContain('CLAUDE.md');
       const content = await fs.readFile(claudePath, 'utf-8');
       expect(content).toContain('User instructions');
-      expect(content).not.toContain(OPENSPEC_MARKERS.start);
+      expect(content).not.toContain(SPECORBIT_MARKERS.start);
     });
 
     it('should delete legacy slash command directories', async () => {
-      const dirPath = path.join(testDir, '.claude', 'commands', 'openspec');
+      const dirPath = path.join(testDir, '.claude', 'commands', 'specorbit');
       await fs.mkdir(dirPath, { recursive: true });
       await fs.writeFile(path.join(dirPath, 'proposal.md'), 'content');
 
       const detection = await detectLegacyArtifacts(testDir);
       const result = await cleanupLegacyArtifacts(testDir, detection);
 
-      expect(result.deletedDirs).toContain('.claude/commands/openspec');
+      expect(result.deletedDirs).toContain('.claude/commands/specorbit');
       await expect(fs.access(dirPath)).rejects.toThrow();
       // Parent directory should still exist
       await expect(fs.access(path.join(testDir, '.claude', 'commands'))).resolves.not.toThrow();
@@ -626,21 +626,21 @@ ${OPENSPEC_MARKERS.end}`);
     it('should delete legacy slash command files', async () => {
       const dirPath = path.join(testDir, '.cursor', 'commands');
       await fs.mkdir(dirPath, { recursive: true });
-      const filePath = path.join(dirPath, 'openspec-proposal.md');
+      const filePath = path.join(dirPath, 'specorbit-proposal.md');
       await fs.writeFile(filePath, 'content');
 
       const detection = await detectLegacyArtifacts(testDir);
       const result = await cleanupLegacyArtifacts(testDir, detection);
 
-      expect(result.deletedFiles).toContain('.cursor/commands/openspec-proposal.md');
+      expect(result.deletedFiles).toContain('.cursor/commands/specorbit-proposal.md');
       await expect(fs.access(filePath)).rejects.toThrow();
     });
 
     it('should delete legacy CoStrict command files without emptying their directory', async () => {
-      const dirPath = path.join(testDir, '.cospec', 'openspec', 'commands');
+      const dirPath = path.join(testDir, '.cospec', 'specorbit', 'commands');
       await fs.mkdir(dirPath, { recursive: true });
-      const legacyFile = path.join(dirPath, 'openspec-proposal.md');
-      const currentFile = path.join(dirPath, 'opsx-propose.md');
+      const legacyFile = path.join(dirPath, 'specorbit-proposal.md');
+      const currentFile = path.join(dirPath, 'orbit-propose.md');
       const userFile = path.join(dirPath, 'my-team-command.md');
       await fs.writeFile(legacyFile, 'content');
       await fs.writeFile(currentFile, 'content');
@@ -649,44 +649,44 @@ ${OPENSPEC_MARKERS.end}`);
       const detection = await detectLegacyArtifacts(testDir);
       const result = await cleanupLegacyArtifacts(testDir, detection);
 
-      expect(result.deletedFiles).toContain('.cospec/openspec/commands/openspec-proposal.md');
-      expect(result.deletedDirs).not.toContain('.cospec/openspec/commands');
+      expect(result.deletedFiles).toContain('.cospec/specorbit/commands/specorbit-proposal.md');
+      expect(result.deletedDirs).not.toContain('.cospec/specorbit/commands');
       await expect(fs.access(legacyFile)).rejects.toThrow();
       await expect(fs.access(currentFile)).resolves.not.toThrow();
       await expect(fs.access(userFile)).resolves.not.toThrow();
     });
 
-    it('should delete openspec/AGENTS.md', async () => {
-      const agentsPath = path.join(testDir, 'openspec', 'AGENTS.md');
+    it('should delete specorbit/AGENTS.md', async () => {
+      const agentsPath = path.join(testDir, 'specorbit', 'AGENTS.md');
       await fs.writeFile(agentsPath, 'content');
 
       const detection = await detectLegacyArtifacts(testDir);
       const result = await cleanupLegacyArtifacts(testDir, detection);
 
-      expect(result.deletedFiles).toContain('openspec/AGENTS.md');
+      expect(result.deletedFiles).toContain('specorbit/AGENTS.md');
       await expect(fs.access(agentsPath)).rejects.toThrow();
-      // openspec directory should still exist
-      await expect(fs.access(path.join(testDir, 'openspec'))).resolves.not.toThrow();
+      // specorbit directory should still exist
+      await expect(fs.access(path.join(testDir, 'specorbit'))).resolves.not.toThrow();
     });
 
-    it('should NOT delete openspec/project.md', async () => {
-      const projectPath = path.join(testDir, 'openspec', 'project.md');
+    it('should NOT delete specorbit/project.md', async () => {
+      const projectPath = path.join(testDir, 'specorbit', 'project.md');
       await fs.writeFile(projectPath, 'User project content');
 
       const detection = await detectLegacyArtifacts(testDir);
       const result = await cleanupLegacyArtifacts(testDir, detection);
 
       expect(result.projectMdNeedsMigration).toBe(true);
-      expect(result.deletedFiles).not.toContain('openspec/project.md');
+      expect(result.deletedFiles).not.toContain('specorbit/project.md');
       await expect(fs.access(projectPath)).resolves.not.toThrow();
     });
 
     it('should handle root AGENTS.md with mixed content', async () => {
       const agentsPath = path.join(testDir, 'AGENTS.md');
       await fs.writeFile(agentsPath, `User content
-${OPENSPEC_MARKERS.start}
-OpenSpec content
-${OPENSPEC_MARKERS.end}`);
+${SPECORBIT_MARKERS.start}
+SpecOrbit content
+${SPECORBIT_MARKERS.end}`);
 
       const detection = await detectLegacyArtifacts(testDir);
       const result = await cleanupLegacyArtifacts(testDir, detection);
@@ -694,12 +694,12 @@ ${OPENSPEC_MARKERS.end}`);
       expect(result.modifiedFiles).toContain('AGENTS.md');
       const content = await fs.readFile(agentsPath, 'utf-8');
       expect(content).toContain('User content');
-      expect(content).not.toContain(OPENSPEC_MARKERS.start);
+      expect(content).not.toContain(SPECORBIT_MARKERS.start);
     });
 
-    it('should remove markers from root AGENTS.md even when only OpenSpec content (never delete)', async () => {
+    it('should remove markers from root AGENTS.md even when only SpecOrbit content (never delete)', async () => {
       const agentsPath = path.join(testDir, 'AGENTS.md');
-      await fs.writeFile(agentsPath, `${OPENSPEC_MARKERS.start}\nOpenSpec content\n${OPENSPEC_MARKERS.end}`);
+      await fs.writeFile(agentsPath, `${SPECORBIT_MARKERS.start}\nSpecOrbit content\n${SPECORBIT_MARKERS.end}`);
 
       const detection = await detectLegacyArtifacts(testDir);
       const result = await cleanupLegacyArtifacts(testDir, detection);
@@ -719,7 +719,7 @@ ${OPENSPEC_MARKERS.end}`);
         slashCommandDirs: [],
         slashCommandFiles: [],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -734,13 +734,13 @@ ${OPENSPEC_MARKERS.end}`);
 
     it('should remove allowlisted global Codex prompts and preserve unmanaged prompts', async () => {
       const promptDir = getCodexPromptDir();
-      const managedPrompt = path.join(promptDir, 'opsx-apply.md');
-      const customOpsxPrompt = path.join(promptDir, 'opsx-review.md');
-      const legacyPrompt = path.join(promptDir, 'openspec-proposal.md');
+      const managedPrompt = path.join(promptDir, 'orbit-apply.md');
+      const customOrbitPrompt = path.join(promptDir, 'orbit-review.md');
+      const legacyPrompt = path.join(promptDir, 'specorbit-proposal.md');
       const unmanagedPrompt = path.join(promptDir, 'personal.md');
       await fs.mkdir(promptDir, { recursive: true });
       await fs.writeFile(managedPrompt, 'legacy apply prompt');
-      await fs.writeFile(customOpsxPrompt, 'user');
+      await fs.writeFile(customOrbitPrompt, 'user');
       await fs.writeFile(legacyPrompt, 'managed');
       await fs.writeFile(unmanagedPrompt, 'user');
 
@@ -749,16 +749,16 @@ ${OPENSPEC_MARKERS.end}`);
 
       expect(result.deletedFiles).toContain(managedPrompt);
       expect(result.deletedFiles).not.toContain(legacyPrompt);
-      expect(result.deletedFiles).not.toContain(customOpsxPrompt);
+      expect(result.deletedFiles).not.toContain(customOrbitPrompt);
       await expect(fs.access(managedPrompt)).rejects.toThrow();
-      await expect(fs.access(customOpsxPrompt)).resolves.not.toThrow();
+      await expect(fs.access(customOrbitPrompt)).resolves.not.toThrow();
       await expect(fs.access(legacyPrompt)).resolves.not.toThrow();
       await expect(fs.access(unmanagedPrompt)).resolves.not.toThrow();
     });
 
     it('should remove exact allowlisted global Codex filenames when their content differs', async () => {
       const promptDir = getCodexPromptDir();
-      const customizedManagedName = path.join(promptDir, 'opsx-apply.md');
+      const customizedManagedName = path.join(promptDir, 'orbit-apply.md');
       await fs.mkdir(promptDir, { recursive: true });
       await fs.writeFile(
         customizedManagedName,
@@ -774,9 +774,9 @@ ${OPENSPEC_MARKERS.end}`);
 
     it('should skip unmanaged global prompt paths in stale detection objects', async () => {
       const promptDir = getCodexPromptDir();
-      const managedPrompt = path.join(promptDir, 'opsx-apply.md');
+      const managedPrompt = path.join(promptDir, 'orbit-apply.md');
       const unmanagedPrompt = path.join(promptDir, 'personal.md');
-      const outsidePrompt = path.join(testDir, 'other-codex-home', 'prompts', 'opsx-apply.md');
+      const outsidePrompt = path.join(testDir, 'other-codex-home', 'prompts', 'orbit-apply.md');
       await fs.mkdir(promptDir, { recursive: true });
       await fs.mkdir(path.dirname(outsidePrompt), { recursive: true });
       await fs.writeFile(managedPrompt, 'legacy apply prompt');
@@ -789,7 +789,7 @@ ${OPENSPEC_MARKERS.end}`);
         slashCommandDirs: [],
         slashCommandFiles: [],
         globalSlashCommandFiles: [managedPrompt, unmanagedPrompt, outsidePrompt],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -828,13 +828,13 @@ ${OPENSPEC_MARKERS.end}`);
       const result = {
         deletedFiles: [],
         modifiedFiles: [],
-        deletedDirs: ['.claude/commands/openspec'],
+        deletedDirs: ['.claude/commands/specorbit'],
         projectMdNeedsMigration: false,
         errors: [],
       };
 
       const summary = formatCleanupSummary(result);
-      expect(summary).toContain('✓ Removed .claude/commands/openspec/ (replaced by OpenSpec skills and commands)');
+      expect(summary).toContain('✓ Removed .claude/commands/specorbit/ (replaced by SpecOrbit skills and commands)');
     });
 
     it('should format modified files', () => {
@@ -847,7 +847,7 @@ ${OPENSPEC_MARKERS.end}`);
       };
 
       const summary = formatCleanupSummary(result);
-      expect(summary).toContain('✓ Removed OpenSpec markers from AGENTS.md');
+      expect(summary).toContain('✓ Removed SpecOrbit markers from AGENTS.md');
     });
 
     it('should include migration hint for project.md', () => {
@@ -861,7 +861,7 @@ ${OPENSPEC_MARKERS.end}`);
 
       const summary = formatCleanupSummary(result);
       expect(summary).toContain('Needs your attention');
-      expect(summary).toContain('openspec/project.md');
+      expect(summary).toContain('specorbit/project.md');
       expect(summary).toContain('config.yaml');
     });
 
@@ -901,14 +901,14 @@ ${OPENSPEC_MARKERS.end}`);
         slashCommandDirs: [],
         slashCommandFiles: [],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
       };
 
       const summary = formatDetectionSummary(detection);
-      expect(summary).toContain('Upgrading to the new OpenSpec');
+      expect(summary).toContain('Upgrading to the new SpecOrbit');
       expect(summary).toContain('agent skills');
       expect(summary).toContain('keeping everything working');
     });
@@ -920,7 +920,7 @@ ${OPENSPEC_MARKERS.end}`);
         slashCommandDirs: [],
         slashCommandFiles: [],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -941,7 +941,7 @@ ${OPENSPEC_MARKERS.end}`);
         slashCommandDirs: [],
         slashCommandFiles: [],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -958,10 +958,10 @@ ${OPENSPEC_MARKERS.end}`);
       const detection = {
         configFiles: [],
         configFilesToUpdate: [],
-        slashCommandDirs: ['.claude/commands/openspec'],
+        slashCommandDirs: ['.claude/commands/specorbit'],
         slashCommandFiles: [],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -969,7 +969,7 @@ ${OPENSPEC_MARKERS.end}`);
 
       const summary = formatDetectionSummary(detection);
       expect(summary).toContain('Files to remove');
-      expect(summary).toContain('• .claude/commands/openspec/');
+      expect(summary).toContain('• .claude/commands/specorbit/');
     });
 
     it('should format slash command files', () => {
@@ -977,9 +977,9 @@ ${OPENSPEC_MARKERS.end}`);
         configFiles: [],
         configFilesToUpdate: [],
         slashCommandDirs: [],
-        slashCommandFiles: ['.cursor/commands/openspec-proposal.md'],
+        slashCommandFiles: ['.cursor/commands/specorbit-proposal.md'],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -987,17 +987,17 @@ ${OPENSPEC_MARKERS.end}`);
 
       const summary = formatDetectionSummary(detection);
       expect(summary).toContain('Files to remove');
-      expect(summary).toContain('• .cursor/commands/openspec-proposal.md');
+      expect(summary).toContain('• .cursor/commands/specorbit-proposal.md');
     });
 
-    it('should format openspec/AGENTS.md', () => {
+    it('should format specorbit/AGENTS.md', () => {
       const detection = {
         configFiles: [],
         configFilesToUpdate: [],
         slashCommandDirs: [],
         slashCommandFiles: [],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: true,
+        hasSpecorbitAgents: true,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -1005,7 +1005,7 @@ ${OPENSPEC_MARKERS.end}`);
 
       const summary = formatDetectionSummary(detection);
       expect(summary).toContain('Files to remove');
-      expect(summary).toContain('• openspec/AGENTS.md');
+      expect(summary).toContain('• specorbit/AGENTS.md');
     });
 
     it('should include attention section for project.md', () => {
@@ -1015,7 +1015,7 @@ ${OPENSPEC_MARKERS.end}`);
         slashCommandDirs: [],
         slashCommandFiles: [],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: true,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: false,
@@ -1023,7 +1023,7 @@ ${OPENSPEC_MARKERS.end}`);
 
       const summary = formatDetectionSummary(detection);
       expect(summary).toContain('Needs your attention');
-      expect(summary).toContain('• openspec/project.md');
+      expect(summary).toContain('• specorbit/project.md');
       expect(summary).toContain('won\'t delete this file');
       expect(summary).toContain('config.yaml');
       expect(summary).toContain('"context:"');
@@ -1036,7 +1036,7 @@ ${OPENSPEC_MARKERS.end}`);
         slashCommandDirs: [],
         slashCommandFiles: [],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: true,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -1047,17 +1047,17 @@ ${OPENSPEC_MARKERS.end}`);
       expect(summary).toContain('Files to update');
       expect(summary).toContain('CLAUDE.md');
       expect(summary).toContain('Needs your attention');
-      expect(summary).toContain('openspec/project.md');
+      expect(summary).toContain('specorbit/project.md');
     });
 
     it('should group both removals and updates correctly', () => {
       const detection = {
         configFiles: ['CLAUDE.md', 'CLINE.md'],
         configFilesToUpdate: ['CLAUDE.md', 'CLINE.md'],
-        slashCommandDirs: ['.claude/commands/openspec'],
+        slashCommandDirs: ['.claude/commands/specorbit'],
         slashCommandFiles: [],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: true,
+        hasSpecorbitAgents: true,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -1067,16 +1067,16 @@ ${OPENSPEC_MARKERS.end}`);
       // Check both sections exist
       expect(summary).toContain('Files to remove');
       expect(summary).toContain('Files to update');
-      // Check removals (only slash commands and openspec/AGENTS.md)
-      expect(summary).toContain('• .claude/commands/openspec/');
-      expect(summary).toContain('• openspec/AGENTS.md');
+      // Check removals (only slash commands and specorbit/AGENTS.md)
+      expect(summary).toContain('• .claude/commands/specorbit/');
+      expect(summary).toContain('• specorbit/AGENTS.md');
       // Check updates (all config files)
       expect(summary).toContain('• CLAUDE.md');
       expect(summary).toContain('• CLINE.md');
     });
 
     it('should format deferred global prompts cleanup separately from repo-local files', () => {
-      const globalPrompt = path.join(getCodexPromptDir(), 'opsx-explore.md');
+      const globalPrompt = path.join(getCodexPromptDir(), 'orbit-explore.md');
       const detection = {
         configFiles: [],
         configFilesToUpdate: [],
@@ -1086,11 +1086,11 @@ ${OPENSPEC_MARKERS.end}`);
         globalSlashCommandDetails: [{
           path: globalPrompt,
           toolId: 'codex',
-          managedFileName: 'opsx-explore.md',
+          managedFileName: 'orbit-explore.md',
           workflowIds: ['explore'],
           replacementLabel: 'Codex skills',
         }],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -1110,7 +1110,7 @@ ${OPENSPEC_MARKERS.end}`);
         slashCommandDirs: [],
         slashCommandFiles: [],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: false,
@@ -1125,7 +1125,7 @@ ${OPENSPEC_MARKERS.end}`);
     it('should return migration hint message', () => {
       const hint = formatProjectMdMigrationHint();
       expect(hint).toContain('Needs your attention');
-      expect(hint).toContain('openspec/project.md');
+      expect(hint).toContain('specorbit/project.md');
       expect(hint).toContain('won\'t delete this file');
       expect(hint).toContain('config.yaml');
       expect(hint).toContain('"context:"');
@@ -1139,7 +1139,7 @@ ${OPENSPEC_MARKERS.end}`);
 
     it('should explain the new context section benefits', () => {
       const hint = formatProjectMdMigrationHint();
-      expect(hint).toContain('included in every OpenSpec request');
+      expect(hint).toContain('included in every SpecOrbit request');
       expect(hint).toContain('reliably');
     });
   });
@@ -1161,17 +1161,17 @@ ${OPENSPEC_MARKERS.end}`);
     it('should include expected tool patterns', () => {
       expect(LEGACY_SLASH_COMMAND_PATHS['claude']).toEqual({
         type: 'directory',
-        path: '.claude/commands/openspec',
+        path: '.claude/commands/specorbit',
       });
 
       expect(LEGACY_SLASH_COMMAND_PATHS['cursor']).toEqual({
         type: 'files',
-        pattern: '.cursor/commands/openspec-*.md',
+        pattern: '.cursor/commands/specorbit-*.md',
       });
 
       expect(LEGACY_SLASH_COMMAND_PATHS['devin']).toEqual({
         type: 'files',
-        pattern: '.windsurf/workflows/openspec-*.md',
+        pattern: '.windsurf/workflows/specorbit-*.md',
       });
     });
 
@@ -1184,7 +1184,7 @@ ${OPENSPEC_MARKERS.end}`);
 
       // Pi was never a pre-1.0 legacy tool
       expect(LEGACY_SLASH_COMMAND_PATHS).not.toHaveProperty('pi');
-      // Junie support landed after the opsx rename; it never had openspec-* files
+      // Junie support landed after the orbit rename; it never had specorbit-* files
       expect(LEGACY_SLASH_COMMAND_PATHS).not.toHaveProperty('junie');
     });
 
@@ -1192,20 +1192,20 @@ ${OPENSPEC_MARKERS.end}`);
       const codexPatterns = LEGACY_SLASH_COMMAND_PATHS['codex'];
       expect(codexPatterns.type).toBe('files');
       const patterns = Array.isArray(codexPatterns.pattern) ? codexPatterns.pattern : [codexPatterns.pattern];
-      expect(patterns).toContain('.codex/prompts/openspec-*.md');
-      expect(patterns).not.toContain('.codex/prompts/opsx-*.md');
+      expect(patterns).toContain('.codex/prompts/specorbit-*.md');
+      expect(patterns).not.toContain('.codex/prompts/orbit-*.md');
     });
   });
 
   describe('LEGACY_GLOBAL_SLASH_COMMAND_PATHS', () => {
     it('should define the allowlisted managed global Codex prompt names separately from project-local paths', () => {
       const codexPatterns = LEGACY_GLOBAL_SLASH_COMMAND_PATHS['codex'];
-      expect(codexPatterns.managedFileNames).toContain('opsx-explore.md');
-      expect(codexPatterns.managedFileNames).toContain('opsx-apply.md');
-      expect(codexPatterns.managedFileNames).toContain('opsx-update.md');
-      expect(codexPatterns.workflowIdsByFileName?.['opsx-update.md']).toEqual(['update']);
-      expect(codexPatterns.managedFileNames).not.toContain('opsx-review.md');
-      expect(codexPatterns.managedFileNames).not.toContain('openspec-proposal.md');
+      expect(codexPatterns.managedFileNames).toContain('orbit-explore.md');
+      expect(codexPatterns.managedFileNames).toContain('orbit-apply.md');
+      expect(codexPatterns.managedFileNames).toContain('orbit-update.md');
+      expect(codexPatterns.workflowIdsByFileName?.['orbit-update.md']).toEqual(['update']);
+      expect(codexPatterns.managedFileNames).not.toContain('orbit-review.md');
+      expect(codexPatterns.managedFileNames).not.toContain('specorbit-proposal.md');
       expect(codexPatterns.resolvePromptDir()).toBe(getCodexPromptDir());
     });
   });
@@ -1215,10 +1215,10 @@ ${OPENSPEC_MARKERS.end}`);
       const detection = {
         configFiles: [],
         configFilesToUpdate: [],
-        slashCommandDirs: ['.claude/commands/openspec'],
+        slashCommandDirs: ['.claude/commands/specorbit'],
         slashCommandFiles: [],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -1234,9 +1234,9 @@ ${OPENSPEC_MARKERS.end}`);
         configFiles: [],
         configFilesToUpdate: [],
         slashCommandDirs: [],
-        slashCommandFiles: ['.cursor/commands/openspec-proposal.md'],
+        slashCommandFiles: ['.cursor/commands/specorbit-proposal.md'],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -1252,9 +1252,9 @@ ${OPENSPEC_MARKERS.end}`);
         configFiles: [],
         configFilesToUpdate: [],
         slashCommandDirs: [],
-        slashCommandFiles: ['.cursor\\commands\\openspec-proposal.md'],
+        slashCommandFiles: ['.cursor\\commands\\specorbit-proposal.md'],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -1269,10 +1269,10 @@ ${OPENSPEC_MARKERS.end}`);
       const detection = {
         configFiles: [],
         configFilesToUpdate: [],
-        slashCommandDirs: ['.claude/commands/openspec', '.qoder/commands/openspec'],
-        slashCommandFiles: ['.cursor/commands/openspec-apply.md', '.windsurf/workflows/openspec-archive.md'],
+        slashCommandDirs: ['.claude/commands/specorbit', '.qoder/commands/specorbit'],
+        slashCommandFiles: ['.cursor/commands/specorbit-apply.md', '.windsurf/workflows/specorbit-archive.md'],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -1292,12 +1292,12 @@ ${OPENSPEC_MARKERS.end}`);
         configFilesToUpdate: [],
         slashCommandDirs: [],
         slashCommandFiles: [
-          '.cursor/commands/openspec-proposal.md',
-          '.cursor/commands/openspec-apply.md',
-          '.cursor/commands/openspec-archive.md',
+          '.cursor/commands/specorbit-proposal.md',
+          '.cursor/commands/specorbit-apply.md',
+          '.cursor/commands/specorbit-archive.md',
         ],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -1314,15 +1314,15 @@ ${OPENSPEC_MARKERS.end}`);
         configFilesToUpdate: [],
         slashCommandDirs: [],
         slashCommandFiles: [],
-        globalSlashCommandFiles: [path.join(getCodexPromptDir(), 'opsx-explore.md')],
+        globalSlashCommandFiles: [path.join(getCodexPromptDir(), 'orbit-explore.md')],
         globalSlashCommandDetails: [{
-          path: path.join(getCodexPromptDir(), 'opsx-explore.md'),
+          path: path.join(getCodexPromptDir(), 'orbit-explore.md'),
           toolId: 'codex',
-          managedFileName: 'opsx-explore.md',
+          managedFileName: 'orbit-explore.md',
           workflowIds: ['explore'],
           replacementLabel: 'Codex skills',
         }],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -1340,7 +1340,7 @@ ${OPENSPEC_MARKERS.end}`);
         slashCommandDirs: [],
         slashCommandFiles: [],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: false,
@@ -1355,9 +1355,9 @@ ${OPENSPEC_MARKERS.end}`);
         configFiles: [],
         configFilesToUpdate: [],
         slashCommandDirs: [],
-        slashCommandFiles: ['.qwen/commands/openspec-proposal.toml'],
+        slashCommandFiles: ['.qwen/commands/specorbit-proposal.toml'],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -1373,9 +1373,9 @@ ${OPENSPEC_MARKERS.end}`);
         configFiles: [],
         configFilesToUpdate: [],
         slashCommandDirs: [],
-        slashCommandFiles: ['.continue/prompts/openspec-apply.prompt'],
+        slashCommandFiles: ['.continue/prompts/specorbit-apply.prompt'],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -1391,9 +1391,9 @@ ${OPENSPEC_MARKERS.end}`);
         configFiles: [],
         configFilesToUpdate: [],
         slashCommandDirs: [],
-        slashCommandFiles: ['.github/prompts/openspec-apply.prompt.md'],
+        slashCommandFiles: ['.github/prompts/specorbit-apply.prompt.md'],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -1404,14 +1404,14 @@ ${OPENSPEC_MARKERS.end}`);
       expect(tools).toHaveLength(1);
     });
 
-    it('should handle opencode opsx-* legacy files', () => {
+    it('should handle opencode orbit-* legacy files', () => {
       const detection = {
         configFiles: [],
         configFilesToUpdate: [],
         slashCommandDirs: [],
-        slashCommandFiles: ['.opencode/command/opsx-propose.md'],
+        slashCommandFiles: ['.opencode/command/orbit-propose.md'],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -1422,14 +1422,14 @@ ${OPENSPEC_MARKERS.end}`);
       expect(tools).toHaveLength(1);
     });
 
-    it('should handle opencode openspec-* legacy files', () => {
+    it('should handle opencode specorbit-* legacy files', () => {
       const detection = {
         configFiles: [],
         configFilesToUpdate: [],
         slashCommandDirs: [],
-        slashCommandFiles: ['.opencode/command/openspec-new.md'],
+        slashCommandFiles: ['.opencode/command/specorbit-new.md'],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -1440,17 +1440,17 @@ ${OPENSPEC_MARKERS.end}`);
       expect(tools).toHaveLength(1);
     });
 
-    it('should deduplicate opencode when both opsx-* and openspec-* files exist', () => {
+    it('should deduplicate opencode when both orbit-* and specorbit-* files exist', () => {
       const detection = {
         configFiles: [],
         configFilesToUpdate: [],
         slashCommandDirs: [],
         slashCommandFiles: [
-          '.opencode/command/opsx-propose.md',
-          '.opencode/command/openspec-new.md',
+          '.opencode/command/orbit-propose.md',
+          '.opencode/command/specorbit-new.md',
         ],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: false,
+        hasSpecorbitAgents: false,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -1470,7 +1470,7 @@ ${OPENSPEC_MARKERS.end}`);
         slashCommandDirs: [],
         slashCommandFiles: [],
         globalSlashCommandFiles: [],
-        hasOpenspecAgents: true,
+        hasSpecorbitAgents: true,
         hasProjectMd: false,
         hasRootAgentsWithMarkers: false,
         hasLegacyArtifacts: true,
@@ -1485,10 +1485,10 @@ ${OPENSPEC_MARKERS.end}`);
     const baseDetection = () => ({
       configFiles: [],
       configFilesToUpdate: [],
-      slashCommandDirs: ['.claude/commands/openspec'],
-      slashCommandFiles: ['.codex/prompts/openspec-explore.md', '.cursor/commands/openspec-apply.md'],
+      slashCommandDirs: ['.claude/commands/specorbit'],
+      slashCommandFiles: ['.codex/prompts/specorbit-explore.md', '.cursor/commands/specorbit-apply.md'],
       globalSlashCommandFiles: [],
-      hasOpenspecAgents: false,
+      hasSpecorbitAgents: false,
       hasProjectMd: false,
       hasRootAgentsWithMarkers: false,
       hasLegacyArtifacts: true,
@@ -1496,9 +1496,9 @@ ${OPENSPEC_MARKERS.end}`);
 
     it('removes only the named tool\'s repo-local artifacts', () => {
       const result = omitToolLegacyArtifacts(baseDetection(), ['codex']);
-      expect(result.slashCommandFiles).toEqual(['.cursor/commands/openspec-apply.md']);
+      expect(result.slashCommandFiles).toEqual(['.cursor/commands/specorbit-apply.md']);
       // Other tools' files and directories are untouched.
-      expect(result.slashCommandDirs).toEqual(['.claude/commands/openspec']);
+      expect(result.slashCommandDirs).toEqual(['.claude/commands/specorbit']);
       expect(result.hasLegacyArtifacts).toBe(true);
     });
 
@@ -1506,7 +1506,7 @@ ${OPENSPEC_MARKERS.end}`);
       const detection = {
         ...baseDetection(),
         slashCommandDirs: [],
-        slashCommandFiles: ['.codex/prompts/openspec-explore.md'],
+        slashCommandFiles: ['.codex/prompts/specorbit-explore.md'],
       };
       const result = omitToolLegacyArtifacts(detection, ['codex']);
       expect(result.slashCommandFiles).toEqual([]);
@@ -1524,7 +1524,7 @@ ${OPENSPEC_MARKERS.end}`);
       const detection = {
         ...baseDetection(),
         slashCommandDirs: [],
-        slashCommandFiles: ['.codex\\prompts\\openspec-explore.md'],
+        slashCommandFiles: ['.codex\\prompts\\specorbit-explore.md'],
       };
       const result = omitToolLegacyArtifacts(detection, ['codex']);
       expect(result.slashCommandFiles).toEqual([]);

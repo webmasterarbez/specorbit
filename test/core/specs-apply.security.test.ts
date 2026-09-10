@@ -18,10 +18,10 @@ describe('spec apply path boundaries', () => {
   let outsideDir: string;
 
   beforeEach(async () => {
-    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'openspec-spec-apply-security-'));
-    changeDir = path.join(tempDir, 'openspec', 'changes', 'test-change');
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'specorbit-spec-apply-security-'));
+    changeDir = path.join(tempDir, 'specorbit', 'changes', 'test-change');
     changeSpecsDir = path.join(changeDir, 'specs');
-    mainSpecsDir = path.join(tempDir, 'openspec', 'specs');
+    mainSpecsDir = path.join(tempDir, 'specorbit', 'specs');
     outsideDir = path.join(tempDir, 'outside');
     await fs.mkdir(changeSpecsDir, { recursive: true });
     await fs.mkdir(mainSpecsDir, { recursive: true });

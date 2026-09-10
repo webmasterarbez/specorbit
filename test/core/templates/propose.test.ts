@@ -3,10 +3,10 @@ import { fileURLToPath } from 'url';
 import { describe, expect, it } from 'vitest';
 
 import {
-  getOpsxProposeSkillTemplate,
-  getOpsxProposeCommandTemplate,
+  getOrbitProposeSkillTemplate,
+  getOrbitProposeCommandTemplate,
   getFfChangeSkillTemplate,
-  getOpsxFfCommandTemplate,
+  getOrbitFfCommandTemplate,
 } from '../../../src/core/templates/skill-templates.js';
 import { generateSkillContent } from '../../../src/core/shared/skill-generation.js';
 import { loadSchema } from '../../../src/core/artifact-graph/schema.js';
@@ -19,18 +19,18 @@ import {
 import { getCommandContents } from '../../../src/core/shared/skill-generation.js';
 import { MAX_CONTEXT_SIZE } from '../../../src/core/project-config.js';
 
-const proposeSkillBody = getOpsxProposeSkillTemplate().instructions;
-const proposeCommandBody = getOpsxProposeCommandTemplate().content;
+const proposeSkillBody = getOrbitProposeSkillTemplate().instructions;
+const proposeCommandBody = getOrbitProposeCommandTemplate().content;
 const proposeBodies: Array<[string, string]> = [
-  ['propose skill', generateSkillContent(getOpsxProposeSkillTemplate(), 'TEST')],
-  ['propose command', getOpsxProposeCommandTemplate().content],
+  ['propose skill', generateSkillContent(getOrbitProposeSkillTemplate(), 'TEST')],
+  ['propose command', getOrbitProposeCommandTemplate().content],
 ];
 
 // ff runs the byte-identical artifact loop, so it carries the identical guards.
 const loopBodies: Array<[string, string]> = [
   ...proposeBodies,
   ['ff skill', getFfChangeSkillTemplate().instructions],
-  ['ff command', getOpsxFfCommandTemplate().content],
+  ['ff command', getOrbitFfCommandTemplate().content],
 ];
 
 const repoRoot = path.resolve(fileURLToPath(new URL('.', import.meta.url)), '../../..');
@@ -110,10 +110,10 @@ describe('propose project context', () => {
   it('reads the resolved root and keeps explicit store selection', () => {
     for (const [label, body] of proposeBodies) {
       const section = contextSection(body);
-      expect(section, label).toContain('`openspec context --json`');
-      expect(section, label).toContain('`openspec context --json --store "<store-id>"`');
+      expect(section, label).toContain('`specorbit context --json`');
+      expect(section, label).toContain('`specorbit context --json --store "<store-id>"`');
       expect(section, label).toContain('returned `root.path`');
-      expect(section, label).toContain('`<root.path>/openspec/config.yaml`');
+      expect(section, label).toContain('`<root.path>/specorbit/config.yaml`');
       expect(section, label).toContain('Only when context returns a resolved `root.path`');
     }
   });
@@ -135,11 +135,11 @@ describe('propose project context', () => {
   it('stops without writing and offers initialization when no root is resolved', () => {
     for (const [label, body] of proposeBodies) {
       const section = contextSection(body);
-      expect(section, label).toContain('context reports `no_openspec_root`');
+      expect(section, label).toContain('context reports `no_specorbit_root`');
       expect(section, label).toContain('stop without creating or changing any files');
-      expect(section, label).toContain('Offer `openspec init`');
+      expect(section, label).toContain('Offer `specorbit init`');
       expect(section, label).toContain('wait for the user to request initialization');
-      expect(section, label).toContain('Do not initialize automatically or run `openspec new change`');
+      expect(section, label).toContain('Do not initialize automatically or run `specorbit new change`');
       expect(section, label).toContain('After initialization, rerun this context check before continuing');
       expect(body, label).not.toContain('resolve the implicit root');
     }
@@ -150,7 +150,7 @@ describe('propose project context', () => {
       const section = contextSection(body);
       expect(section, label).toContain('For any other context failure, stop');
       expect(section, label).toContain('do not fall back to the current directory');
-      expect(section, label).toContain('run later OpenSpec commands without the selected store');
+      expect(section, label).toContain('run later SpecOrbit commands without the selected store');
     }
   });
 
@@ -171,7 +171,7 @@ describe('propose project context', () => {
 describe('planning code inspection (#339)', () => {
   it('inspects the project after loading instructions and dependencies, before creating or delegating artifacts', () => {
     for (const [label, body] of loopBodies) {
-      const instructions = body.indexOf('openspec instructions <artifact-id>');
+      const instructions = body.indexOf('specorbit instructions <artifact-id>');
       const dependencies = body.indexOf('Read any completed dependency files');
       const inspection = body.indexOf('**Inspect the relevant project before drafting**');
       const delegation = body.indexOf('If the `instruction` field delegates creation');
@@ -182,7 +182,7 @@ describe('planning code inspection (#339)', () => {
 
       const guidance = body.slice(inspection, delegation);
       expect(guidance, label).toContain('Read `context` and `rules` first');
-      expect(guidance, label).toContain('relevant implementation, nearby tests, configuration, and documentation outside `openspec/`');
+      expect(guidance, label).toContain('relevant implementation, nearby tests, configuration, and documentation outside `specorbit/`');
       expect(guidance, label).toContain('Keep inspection read-only and proportional to the change');
       expect(guidance, label).toContain('reuse findings for later artifacts');
       expect(guidance, label).toContain('Do this discovery now');
@@ -267,12 +267,12 @@ describe('propose implementation boundary', () => {
   });
 
   it('hands command-only tools to apply instead of advertising direct coding (#258)', () => {
-    expect(proposeCommandBody).toContain('When you are ready, run `/opsx:apply`.');
+    expect(proposeCommandBody).toContain('When you are ready, run `/orbit:apply`.');
     expect(proposeCommandBody).not.toContain('ask me to implement');
     expect(proposeCommandBody).not.toContain('ask me to apply this change');
 
     expect(proposeSkillBody).toContain(
-      'run `/opsx:apply` or ask me to apply this change'
+      'run `/orbit:apply` or ask me to apply this change'
     );
     expect(proposeSkillBody).not.toContain('ask me to implement');
   });
@@ -305,8 +305,8 @@ describe('propose implementation boundary', () => {
       );
       expect(generated, adapter.toolId).not.toContain('ask me to implement');
       expect(generated, adapter.toolId).toContain('stop without creating or changing any files');
-      expect(generated, adapter.toolId).toContain('Offer `openspec init`');
-      expect(generated, adapter.toolId).toContain('Do not initialize automatically or run `openspec new change`');
+      expect(generated, adapter.toolId).toContain('Offer `specorbit init`');
+      expect(generated, adapter.toolId).toContain('Do not initialize automatically or run `specorbit new change`');
     }
   });
 });
@@ -325,12 +325,12 @@ describe('propose schema selection', () => {
       expect(statusStep, `${label} is missing status lookup`).toBeGreaterThan(createStep);
 
       const createSection = body.slice(createStep, statusStep);
-      expect(createSection, label).toMatch(/^\s*openspec new change "<name>"\s*$/m);
+      expect(createSection, label).toMatch(/^\s*specorbit new change "<name>"\s*$/m);
       expect(createSection, label).toMatch(
-        /^\s*openspec new change "<name>" --schema "<schema-name>"\s*$/m
+        /^\s*specorbit new change "<name>" --schema "<schema-name>"\s*$/m
       );
       expect(createSection, label).toContain(
-        'If a registered store is selected, append `--store "<store-id>"` to that command and each later OpenSpec command shown below that accepts `--store`'
+        'If a registered store is selected, append `--store "<store-id>"` to that command and each later SpecOrbit command shown below that accepts `--store`'
       );
       expect(createSection, label).not.toContain('every follow-up command');
     }
@@ -344,24 +344,24 @@ describe('propose schema selection', () => {
 
       expect(schemaSection, label).toContain('Use the configured default schema');
       expect(schemaSection, label).toContain('Explicitly requests a specific schema by name');
-      const contextCommand = schemaSection.indexOf('`openspec context --json`');
-      const schemasCommand = schemaSection.indexOf('`openspec schemas --json`');
+      const contextCommand = schemaSection.indexOf('`specorbit context --json`');
+      const schemasCommand = schemaSection.indexOf('`specorbit schemas --json`');
       expect(contextCommand, `${label} is missing root resolution`).toBeGreaterThanOrEqual(0);
       expect(schemasCommand, `${label} lists schemas before resolving the root`).toBeGreaterThan(
         contextCommand
       );
       expect(schemaSection, label).toContain('from the current working directory');
       expect(schemaSection, label).toContain(
-        '`openspec context --json --store "<store-id>"`'
+        '`specorbit context --json --store "<store-id>"`'
       );
       expect(schemaSection, label).toContain(
-        'run `openspec schemas --json` with its working directory'
+        'run `specorbit schemas --json` with its working directory'
       );
       expect(schemaSection, label).toContain('returned `root.path`');
       expect(schemaSection, label).toContain('local `store:` pointer');
       expect(schemaSection, label).toContain('global `defaultStore`');
       expect(schemaSection, label).toContain(
-        'append `--store "<store-id>"` to `openspec schemas --json` as well'
+        'append `--store "<store-id>"` to `specorbit schemas --json` as well'
       );
       expect(schemaSection, label).not.toContain('`schemas` does not accept `--store`');
       expect(schemaSection, label).toContain('If context fails, stop as described in the context-loading step');
@@ -445,7 +445,7 @@ describe('artifact loop guards (propose and ff)', () => {
 
   // The skip_specs carve-out must stay explicit in the loop: an artifact the CLI
   // already reports as `skipped` is satisfied and must never be written, or the
-  // agent creates spec files that `openspec validate` then rejects as
+  // agent creates spec files that `specorbit validate` then rejects as
   // conflicting with the marker (#1399).
   it('treats a `skipped` status as satisfied and never creates it (#1399)', () => {
     for (const [label, body] of loopBodies) {
@@ -460,7 +460,7 @@ describe('artifact loop guards (propose and ff)', () => {
   it('makes the agent fetch and read the instruction field before skipping', () => {
     for (const [label, body] of loopBodies) {
       expect(body, label).toContain(
-        'run `openspec instructions <artifact-id> --change "<name>" --json` and skip only if its `instruction` field marks it optional'
+        'run `specorbit instructions <artifact-id> --change "<name>" --json` and skip only if its `instruction` field marks it optional'
       );
       expect(body, label).toContain('never by your own judgment');
     }

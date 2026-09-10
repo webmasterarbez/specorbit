@@ -9,7 +9,7 @@ import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 
 export function getVerifyChangeSkillTemplate(): SkillTemplate {
   return {
-    name: 'openspec-verify-change',
+    name: 'specorbit-verify-change',
     description: 'Verify implementation matches change artifacts. Use when the user wants to validate that implementation is complete, correct, and coherent before archiving.',
     instructions: `Verify that an implementation matches the change artifacts (specs, tasks, design).
 
@@ -24,17 +24,17 @@ ${STORE_SELECTION_GUIDANCE}
    If a name is provided, use it. Otherwise:
    - Infer from conversation context if the user mentioned a change
    - Auto-select if only one active change exists
-   - If ambiguous, run \`openspec list --json\` to get available changes and ask the user to select one
+   - If ambiguous, run \`specorbit list --json\` to get available changes and ask the user to select one
 
    When prompting, show changes that have implementation tasks (tasks artifact exists).
    Include the schema used for each change if available.
    Mark changes with incomplete tasks as "(In Progress)".
 
-   Always announce: "Using change: <name>" and how to override (e.g., \`/opsx:verify <other>\`).
+   Always announce: "Using change: <name>" and how to override (e.g., \`/orbit:verify <other>\`).
 
 2. **Check status to understand the schema**
    \`\`\`bash
-   openspec status --change "<name>" --json
+   specorbit status --change "<name>" --json
    \`\`\`
    Parse the JSON to understand:
    - \`schemaName\`: The workflow being used (e.g., "spec-driven")
@@ -44,7 +44,7 @@ ${STORE_SELECTION_GUIDANCE}
 3. **Get planning context and load artifacts**
 
    \`\`\`bash
-   openspec instructions apply --change "<name>" --json
+   specorbit instructions apply --change "<name>" --json
    \`\`\`
 
    This returns the change directory and \`contextFiles\` (artifact ID -> array of concrete file paths). Read all available artifacts from \`contextFiles\`.
@@ -175,14 +175,14 @@ Use clear markdown with:
 - Specific, actionable recommendations
 - No vague suggestions like "consider reviewing"`,
     license: 'MIT',
-    compatibility: 'Requires openspec CLI.',
-    metadata: { author: 'openspec', version: '1.0' },
+    compatibility: 'Requires specorbit CLI.',
+    metadata: { author: 'specorbit', version: '1.0' },
   };
 }
 
-export function getOpsxVerifyCommandTemplate(): CommandTemplate {
+export function getOrbitVerifyCommandTemplate(): CommandTemplate {
   return {
-    name: 'OPSX: Verify',
+    name: 'Orbit: Verify',
     description: 'Verify implementation matches change artifacts before archiving',
     category: 'Workflow',
     tags: ['workflow', 'verify', 'experimental'],
@@ -190,7 +190,7 @@ export function getOpsxVerifyCommandTemplate(): CommandTemplate {
 
 ${STORE_SELECTION_GUIDANCE}
 
-**Input**: Optionally specify a change name after \`/opsx:verify\` (e.g., \`/opsx:verify add-auth\`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+**Input**: Optionally specify a change name after \`/orbit:verify\` (e.g., \`/orbit:verify add-auth\`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
 
 **Steps**
 
@@ -199,17 +199,17 @@ ${STORE_SELECTION_GUIDANCE}
    If a name is provided, use it. Otherwise:
    - Infer from conversation context if the user mentioned a change
    - Auto-select if only one active change exists
-   - If ambiguous, run \`openspec list --json\` to get available changes and ask the user to select one
+   - If ambiguous, run \`specorbit list --json\` to get available changes and ask the user to select one
 
    When prompting, show changes that have implementation tasks (tasks artifact exists).
    Include the schema used for each change if available.
    Mark changes with incomplete tasks as "(In Progress)".
 
-   Always announce: "Using change: <name>" and how to override (e.g., \`/opsx:verify <other>\`).
+   Always announce: "Using change: <name>" and how to override (e.g., \`/orbit:verify <other>\`).
 
 2. **Check status to understand the schema**
    \`\`\`bash
-   openspec status --change "<name>" --json
+   specorbit status --change "<name>" --json
    \`\`\`
    Parse the JSON to understand:
    - \`schemaName\`: The workflow being used (e.g., "spec-driven")
@@ -219,7 +219,7 @@ ${STORE_SELECTION_GUIDANCE}
 3. **Get planning context and load artifacts**
 
    \`\`\`bash
-   openspec instructions apply --change "<name>" --json
+   specorbit instructions apply --change "<name>" --json
    \`\`\`
 
    This returns the change directory and \`contextFiles\` (artifact ID -> array of concrete file paths). Read all available artifacts from \`contextFiles\`.

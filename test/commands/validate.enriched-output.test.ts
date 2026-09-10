@@ -7,8 +7,8 @@ import { runCLI } from '../helpers/run-cli.js';
 describe('validate command enriched human output', () => {
   const projectRoot = process.cwd();
   const testDir = path.join(projectRoot, 'test-validate-enriched-tmp');
-  const changesDir = path.join(testDir, 'openspec', 'changes');
-  const bin = path.join(projectRoot, 'bin', 'openspec.js');
+  const changesDir = path.join(testDir, 'specorbit', 'changes');
+  const bin = path.join(projectRoot, 'bin', 'specorbit.js');
 
 
   beforeEach(async () => {
@@ -20,7 +20,7 @@ describe('validate command enriched human output', () => {
   });
 
   const writeArchiveBlocker = async () => {
-    const mainDir = path.join(testDir, 'openspec', 'specs', 'widgets');
+    const mainDir = path.join(testDir, 'specorbit', 'specs', 'widgets');
     const changeDir = path.join(changesDir, 'c-archive');
     const deltaDir = path.join(changeDir, 'specs', 'widgets');
     await fs.mkdir(mainDir, { recursive: true });
@@ -108,7 +108,7 @@ The system SHALL report the future state.
           const deltaFile = path.join(changesDir, 'c-archive', 'specs', 'widgets', 'spec.md');
           const delta = await fs.readFile(deltaFile, 'utf-8');
           await fs.writeFile(deltaFile, delta.replace('## MODIFIED Requirements', '## ADDED Requirements'));
-          const mainFile = path.join(testDir, 'openspec', 'specs', 'widgets', 'spec.md');
+          const mainFile = path.join(testDir, 'specorbit', 'specs', 'widgets', 'spec.md');
           const missingFile = path.join(testDir, 'missing-spec.md');
           await fs.unlink(mainFile);
           await fs.symlink(missingFile, mainFile);
@@ -177,7 +177,7 @@ The system SHALL report the future state.
       expect(code).not.toBe(0);
       expect(stderr).toContain('has issues');
       expect(stderr).toContain('Next steps:');
-      expect(stderr).toContain('openspec change show');
+      expect(stderr).toContain('specorbit change show');
     } finally {
       process.chdir(originalCwd);
     }

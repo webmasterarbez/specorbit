@@ -38,7 +38,7 @@ function machineEnv(home: string, gitConfigGlobal: string): NodeJS.ProcessEnv {
     XDG_DATA_HOME: path.join(home, 'data'),
     XDG_STATE_HOME: path.join(home, 'state'),
     XDG_CACHE_HOME: path.join(home, 'cache'),
-    OPENSPEC_TELEMETRY: '0',
+    SPECORBIT_TELEMETRY: '0',
     GIT_CONFIG_GLOBAL: gitConfigGlobal,
     GIT_CONFIG_SYSTEM: emptyGitConfig,
     GIT_AUTHOR_NAME: 'Journey Tester',
@@ -174,7 +174,7 @@ async function writeCompletedChangeArtifacts(
 }
 
 beforeAll(async () => {
-  base = await fs.mkdtemp(path.join(tmpdir(), 'openspec-store-lifecycle-'));
+  base = await fs.mkdtemp(path.join(tmpdir(), 'specorbit-store-lifecycle-'));
   storeRoot = path.join(base, 'machine-a', 'team-context');
   cloneRoot = path.join(base, 'machine-b', 'team-context');
   projectDir = path.join(base, 'machine-a', 'app-repo');
@@ -210,16 +210,16 @@ describe('standalone store lifecycle journey', () => {
     });
     expect(payload.created_files).toEqual(
       expect.arrayContaining([
-        'openspec/config.yaml',
-        'openspec/specs/.gitkeep',
-        'openspec/changes/archive/.gitkeep',
-        '.openspec-store/store.yaml',
+        'specorbit/config.yaml',
+        'specorbit/specs/.gitkeep',
+        'specorbit/changes/archive/.gitkeep',
+        '.specorbit-store/store.yaml',
       ])
     );
 
     const log = await git(storeRoot, machineA, ['log', '--format=%s']);
     expect(log.trim().split('\n')).toHaveLength(1);
-    expect(log).toContain(`Initialize OpenSpec store ${STORE_ID}`);
+    expect(log).toContain(`Initialize SpecOrbit store ${STORE_ID}`);
 
     const committedFiles = await git(storeRoot, machineA, [
       'show',
@@ -227,9 +227,9 @@ describe('standalone store lifecycle journey', () => {
       '--format=',
       'HEAD',
     ]);
-    expect(committedFiles).toContain('.openspec-store/store.yaml');
-    expect(committedFiles).toContain('openspec/specs/.gitkeep');
-    expect(committedFiles).toContain('openspec/changes/archive/.gitkeep');
+    expect(committedFiles).toContain('.specorbit-store/store.yaml');
+    expect(committedFiles).toContain('specorbit/specs/.gitkeep');
+    expect(committedFiles).toContain('specorbit/changes/archive/.gitkeep');
 
     const status = await git(storeRoot, machineA, ['status', '--porcelain']);
     expect(status.trim()).toBe('');
@@ -245,7 +245,7 @@ describe('standalone store lifecycle journey', () => {
     });
     expect(doctor.exitCode).toBe(0);
     const store = JSON.parse(doctor.stdout).stores[0];
-    expect(store.openspec_root.healthy).toBe(true);
+    expect(store.specorbit_root.healthy).toBe(true);
     expect(store.git).toEqual({
       is_repository: true,
       has_commits: true,
@@ -284,7 +284,7 @@ describe('standalone store lifecycle journey', () => {
       { env: machineA, cwd: projectDir }
     );
     expect(status.exitCode).toBe(0);
-    expect(status.stderr).toContain(`Using OpenSpec root: ${STORE_ID}`);
+    expect(status.stderr).toContain(`Using SpecOrbit root: ${STORE_ID}`);
     expect(status.stdout).not.toContain('Planning home');
 
     const instructions = await runCLI(
@@ -293,11 +293,11 @@ describe('standalone store lifecycle journey', () => {
     );
     expect(instructions.exitCode).toBe(0);
     expect(instructions.stdout).toContain(
-      path.join(canonical(storeRoot), 'openspec', 'changes', changeId, 'proposal.md')
+      path.join(canonical(storeRoot), 'specorbit', 'changes', changeId, 'proposal.md')
     );
 
     // The test acts as the agent and writes the artifacts.
-    const changeDir = path.join(storeRoot, 'openspec', 'changes', changeId);
+    const changeDir = path.join(storeRoot, 'specorbit', 'changes', changeId);
     await writeCompletedChangeArtifacts(changeDir, 'billing');
 
     const validated = await runCLI(
@@ -332,11 +332,11 @@ describe('standalone store lifecycle journey', () => {
     expect(archivePayload.archive.change).toBe(changeId);
     expect(archivePayload.root.store_id).toBe(STORE_ID);
 
-    const specPath = path.join(storeRoot, 'openspec', 'specs', 'billing', 'spec.md');
+    const specPath = path.join(storeRoot, 'specorbit', 'specs', 'billing', 'spec.md');
     await expect(fs.readFile(specPath, 'utf-8')).resolves.toContain('billing SHALL work');
 
     const archiveEntries = await fs.readdir(
-      path.join(storeRoot, 'openspec', 'changes', 'archive')
+      path.join(storeRoot, 'specorbit', 'changes', 'archive')
     );
     expect(archiveEntries.some((entry) => entry.endsWith(`-${changeId}`))).toBe(true);
   }, JOURNEY_TIMEOUT_MS);
@@ -376,7 +376,7 @@ describe('standalone store lifecycle journey', () => {
       env: machineB,
     });
     expect(doctor.exitCode).toBe(0);
-    expect(JSON.parse(doctor.stdout).stores[0].openspec_root.healthy).toBe(true);
+    expect(JSON.parse(doctor.stdout).stores[0].specorbit_root.healthy).toBe(true);
 
     const specs = await runCLI(
       ['list', '--specs', '--store', STORE_ID, '--json'],
@@ -403,7 +403,7 @@ describe('standalone store lifecycle journey', () => {
       { env: machineB, cwd: base }
     );
     expect(created.exitCode).toBe(0);
-    expect(created.stderr).toContain(`Using OpenSpec root: ${STORE_ID}`);
+    expect(created.stderr).toContain(`Using SpecOrbit root: ${STORE_ID}`);
     expect(created.stdout).toContain(`--store ${STORE_ID}`);
 
     const instructions = await runCLI(
@@ -412,10 +412,10 @@ describe('standalone store lifecycle journey', () => {
     );
     expect(instructions.exitCode).toBe(0);
     expect(instructions.stdout).toContain(
-      path.join(canonical(cloneRoot), 'openspec', 'changes', changeId, 'proposal.md')
+      path.join(canonical(cloneRoot), 'specorbit', 'changes', changeId, 'proposal.md')
     );
 
-    const changeDir = path.join(cloneRoot, 'openspec', 'changes', changeId);
+    const changeDir = path.join(cloneRoot, 'specorbit', 'changes', changeId);
     await writeCompletedChangeArtifacts(changeDir, 'invoicing');
 
     const status = await runCLI(
@@ -446,7 +446,7 @@ describe('standalone store lifecycle journey', () => {
     expect(archived.exitCode).toBe(0);
     expect(JSON.parse(archived.stdout).archive.change).toBe(changeId);
 
-    const specPath = path.join(cloneRoot, 'openspec', 'specs', 'invoicing', 'spec.md');
+    const specPath = path.join(cloneRoot, 'specorbit', 'specs', 'invoicing', 'spec.md');
     await expect(fs.readFile(specPath, 'utf-8')).resolves.toContain('invoicing SHALL work');
 
     // Post-resolution failures keep the banner, and the hint keeps the store:
@@ -457,27 +457,27 @@ describe('standalone store lifecycle journey', () => {
       { env: machineB, cwd: base }
     );
     expect(failedApply.exitCode).not.toBe(0);
-    expect(failedApply.stderr).toContain(`Using OpenSpec root: ${STORE_ID}`);
-    expect(failedApply.stderr).toContain(`openspec new change <name> --store ${STORE_ID}`);
+    expect(failedApply.stderr).toContain(`Using SpecOrbit root: ${STORE_ID}`);
+    expect(failedApply.stderr).toContain(`specorbit new change <name> --store ${STORE_ID}`);
   }, JOURNEY_TIMEOUT_MS);
 
-  it('end state is just normal OpenSpec files in both checkouts', async () => {
+  it('end state is just normal SpecOrbit files in both checkouts', async () => {
     for (const root of [storeRoot, cloneRoot]) {
       const entries = await listRelativeEntries(root, new Set(['.git']));
 
       for (const entry of entries) {
-        expect(entry).toMatch(/^(\.openspec-store(\/|\/store\.yaml)?|openspec(\/.*)?)$/);
+        expect(entry).toMatch(/^(\.specorbit-store(\/|\/store\.yaml)?|specorbit(\/.*)?)$/);
         expect(entry).not.toMatch(/initiative|workspace/i);
       }
 
-      expect(entries).toContain('.openspec-store/store.yaml');
-      expect(entries).toContain('openspec/config.yaml');
+      expect(entries).toContain('.specorbit-store/store.yaml');
+      expect(entries).toContain('specorbit/config.yaml');
     }
 
     // Global state holds only registry/config metadata, no planning files.
     for (const env of [machineA, machineB]) {
       const dataEntries = await listRelativeEntries(
-        path.join(env.XDG_DATA_HOME as string, 'openspec'),
+        path.join(env.XDG_DATA_HOME as string, 'specorbit'),
         new Set()
       );
       expect(dataEntries).toEqual(['stores/', 'stores/registry.yaml']);

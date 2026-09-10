@@ -179,7 +179,7 @@ export class Validator {
 
       // A spec.md directly at the specs/ root has no capability folder, so the
       // merge path drops it: without this error the change validates clean and
-      // archives while its requirements never reach openspec/specs/ (#1385).
+      // archives while its requirements never reach specorbit/specs/ (#1385).
       // Only a regular file counts — a *directory* named spec.md is a capability
       // folder like any other, and discoverSpecFiles reads it normally.
       const rootSpecStat = await fs.stat(path.join(specsDir, 'spec.md')).catch(() => null);
@@ -906,7 +906,7 @@ export class Validator {
    * When the SHALL/MUST keyword already appears in the requirement header (e.g.
    * `### Requirement: The system SHALL ...`) the original generic error
    * ("must contain SHALL or MUST") is confusing because the keyword is visibly
-   * present in the spec. Per the OpenSpec conventions the keyword has to live
+   * present in the spec. Per the SpecOrbit conventions the keyword has to live
    * on the requirement body line (the line right after the header), so we point
    * the author at that exact fix when the keyword is found in the header only.
    */

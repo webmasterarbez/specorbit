@@ -20,7 +20,7 @@ export interface CreateChangeOptions {
   defaultSchema?: string;
   /** Directory that should contain the change directories */
   changesDir?: string;
-  /** Additional metadata to persist in the change's .openspec.yaml */
+  /** Additional metadata to persist in the change's .specorbit.yaml */
   metadata?: Partial<Pick<ChangeMetadata, 'goal' | 'affected_areas' | 'initiative'>>;
 }
 
@@ -45,7 +45,7 @@ export interface ValidationResult {
 /**
  * Validates that a change name follows kebab-case conventions.
  *
- * Uses OpenSpec's shared kebab-id grammar (the same one store ids and change
+ * Uses SpecOrbit's shared kebab-id grammar (the same one store ids and change
  * metadata ids use), so a change name may:
  * - Start with a lowercase letter or a digit
  * - Contain only lowercase letters, numbers, and hyphens
@@ -109,7 +109,7 @@ export function validateChangeName(name: string): ValidationResult {
 /**
  * Creates a new change directory with metadata file.
  *
- * @param projectRoot - The root directory of the project (where `openspec/` lives)
+ * @param projectRoot - The root directory of the project (where `specorbit/` lives)
  * @param name - The change name (must be valid kebab-case)
  * @param options - Optional settings for the change
  * @throws Error if the change name is invalid
@@ -119,12 +119,12 @@ export function validateChangeName(name: string): ValidationResult {
  * @returns Result containing the resolved schema name
  *
  * @example
- * // Creates openspec/changes/add-auth/ with default schema
+ * // Creates specorbit/changes/add-auth/ with default schema
  * const result = await createChange('/path/to/project', 'add-auth')
  * console.log(result.schema) // 'spec-driven' or value from config
  *
  * @example
- * // Creates openspec/changes/add-auth/ with custom schema
+ * // Creates specorbit/changes/add-auth/ with custom schema
  * const result = await createChange('/path/to/project', 'add-auth', { schema: 'my-workflow' })
  * console.log(result.schema) // 'my-workflow'
  */
@@ -160,7 +160,7 @@ export async function createChange(
   validateSchemaName(schemaName, projectRoot);
 
   // Build the change directory path
-  const changeDir = path.join(options.changesDir ?? path.join(projectRoot, 'openspec', 'changes'), name);
+  const changeDir = path.join(options.changesDir ?? path.join(projectRoot, 'specorbit', 'changes'), name);
 
   // Check if change already exists
   if (await FileSystemUtils.directoryExists(changeDir)) {
@@ -178,14 +178,14 @@ export async function createChange(
   // specs/ and changes/archive/ exist, and write a config only when
   // none exists. The config records the PROJECT default schema, never
   // a one-change --schema override.
-  const openspecDir = path.join(projectRoot, 'openspec');
+  const specorbitDir = path.join(projectRoot, 'specorbit');
 
   // Create the directory (including parent directories if needed)
   await FileSystemUtils.createDirectory(changeDir);
-  await FileSystemUtils.createDirectory(path.join(openspecDir, 'specs'));
-  await FileSystemUtils.createDirectory(path.join(openspecDir, 'changes', 'archive'));
-  const configPath = path.join(openspecDir, 'config.yaml');
-  const configYmlPath = path.join(openspecDir, 'config.yml');
+  await FileSystemUtils.createDirectory(path.join(specorbitDir, 'specs'));
+  await FileSystemUtils.createDirectory(path.join(specorbitDir, 'changes', 'archive'));
+  const configPath = path.join(specorbitDir, 'config.yaml');
+  const configYmlPath = path.join(specorbitDir, 'config.yml');
   if (
     !(await FileSystemUtils.fileExists(configPath)) &&
     !(await FileSystemUtils.fileExists(configYmlPath))

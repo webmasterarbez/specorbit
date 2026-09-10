@@ -241,7 +241,7 @@ describe('buildUpdatedSpec (repeated delta section headers)', () => {
   let tempDir: string;
 
   beforeEach(async () => {
-    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'openspec-dupsection-'));
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'specorbit-dupsection-'));
   });
   afterEach(async () => {
     await fs.rm(tempDir, { recursive: true, force: true });
@@ -275,9 +275,9 @@ describe('buildUpdatedSpec (repeated delta section headers)', () => {
    * return its result without touching any real project.
    */
   async function build(deltaBody: string) {
-    const specsRoot = path.join(tempDir, 'openspec', 'specs');
+    const specsRoot = path.join(tempDir, 'specorbit', 'specs');
     const specsDir = path.join(specsRoot, 'billing');
-    const changeDir = path.join(tempDir, 'openspec', 'changes', 'c');
+    const changeDir = path.join(tempDir, 'specorbit', 'changes', 'c');
     await fs.mkdir(specsDir, { recursive: true });
     await fs.mkdir(path.join(changeDir, 'specs', 'billing'), { recursive: true });
     await fs.writeFile(path.join(specsDir, 'spec.md'), MAIN_SPEC);

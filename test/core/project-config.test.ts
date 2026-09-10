@@ -15,7 +15,7 @@ describe('project-config', () => {
   let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openspec-test-config-'));
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'specorbit-test-config-'));
     consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
@@ -27,7 +27,7 @@ describe('project-config', () => {
   describe('readProjectConfig', () => {
     describe('resilient parsing', () => {
       it('should parse complete valid config', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -58,7 +58,7 @@ rules:
       });
 
       it('should preserve prototype-named rule keys as inert data', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -79,7 +79,7 @@ rules:
       });
 
       it('should parse minimal config with schema only', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(path.join(configDir, 'config.yaml'), 'schema: spec-driven\n');
 
@@ -92,7 +92,7 @@ rules:
       });
 
       it('should parse apply and archive operation guidance independently from rules', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -124,7 +124,7 @@ operations:
       });
 
       it('should omit operations when the field is absent', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(path.join(configDir, 'config.yaml'), 'schema: spec-driven\n');
 
@@ -132,7 +132,7 @@ operations:
       });
 
       it('should preserve a valid operation when another operation is malformed', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -162,7 +162,7 @@ operations:
       });
 
       it('should ignore a non-object operations field without discarding other fields', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -183,7 +183,7 @@ operations:
       });
 
       it('should parse githubCopilot.cloudAgent', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -198,7 +198,7 @@ githubCopilot:
       });
 
       it('should warn on a non-boolean cloudAgent and keep the rest of the config', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -217,7 +217,7 @@ githubCopilot:
       });
 
       it('should warn on a non-object githubCopilot field', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -233,7 +233,7 @@ githubCopilot: true
       });
 
       it('should ignore malformed operation entries independently', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -255,7 +255,7 @@ operations:
       });
 
       it('should warn for unknown operation IDs and fields while preserving valid guidance', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -283,7 +283,7 @@ operations:
       });
 
       it('should filter empty guidance and omit operations with no non-empty guidance', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -312,7 +312,7 @@ operations:
       });
 
       it('should preserve multi-line and Markdown guidance without rewriting it', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -335,7 +335,7 @@ operations:
       });
 
       it('should return partial config when schema is invalid', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -361,7 +361,7 @@ rules:
       });
 
       it('should return partial config when context is invalid', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -387,7 +387,7 @@ rules:
       });
 
       it('should return partial config when rules is not an object', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -410,7 +410,7 @@ rules: ["not", "an", "object"]
 
       it('should handle rules: null without aborting config parsing', () => {
         // YAML `rules:` with no value parses to null
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -433,7 +433,7 @@ rules:
       });
 
       it('should filter out invalid rules for specific artifact', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -462,7 +462,7 @@ rules:
       });
 
       it('should filter out empty string rules', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -490,7 +490,7 @@ rules:
       });
 
       it('should skip artifact if all rules are empty strings', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -515,7 +515,7 @@ rules:
       });
 
       it('should handle completely invalid YAML gracefully', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(path.join(configDir, 'config.yaml'), 'schema: [unclosed');
 
@@ -533,7 +533,7 @@ rules:
       });
 
       it('should warn when config is not a YAML object', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(path.join(configDir, 'config.yaml'), '"just a string"');
 
@@ -546,7 +546,7 @@ rules:
       });
 
       it('should handle empty config file', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(path.join(configDir, 'config.yaml'), '');
 
@@ -558,7 +558,7 @@ rules:
 
     describe('references parsing', () => {
       function writeConfig(body: string): void {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(path.join(configDir, 'config.yaml'), body);
       }
@@ -640,7 +640,7 @@ rules:
 
     describe('context size limit enforcement', () => {
       it('should accept context under 50KB limit', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         const smallContext = 'a'.repeat(1000); // 1KB
         fs.writeFileSync(
@@ -657,7 +657,7 @@ rules:
       });
 
       it('should reject context over 50KB limit', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         const largeContext = 'a'.repeat(51 * 1024); // 51KB
         fs.writeFileSync(
@@ -678,7 +678,7 @@ rules:
       });
 
       it('should handle context exactly at 50KB limit', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         const exactContext = 'a'.repeat(50 * 1024); // Exactly 50KB
         fs.writeFileSync(
@@ -695,7 +695,7 @@ rules:
       });
 
       it('should handle multi-byte UTF-8 characters in size calculation', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         // Unicode snowman is 3 bytes in UTF-8
         const contextWithUnicode = '☃'.repeat(18000); // ~54KB in UTF-8 (18000 * 3 bytes)
@@ -718,7 +718,7 @@ context: |
 
     describe('.yml/.yaml precedence', () => {
       it('should prefer .yaml when both exist', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -738,7 +738,7 @@ context: |
       it.each(['context: [', 'context: 123\n'])(
         'does not fall back to .yml when .yaml has invalid content: %s',
         (yaml) => {
-          const configDir = path.join(tempDir, 'openspec');
+          const configDir = path.join(tempDir, 'specorbit');
           fs.mkdirSync(configDir, { recursive: true });
           fs.writeFileSync(path.join(configDir, 'config.yaml'), yaml);
           fs.writeFileSync(path.join(configDir, 'config.yml'), 'context: from yml\n');
@@ -748,7 +748,7 @@ context: |
       );
 
       it('should use .yml when .yaml does not exist', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yml'),
@@ -762,7 +762,7 @@ context: |
       });
 
       it('should return null when neither .yaml nor .yml exist', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
 
         const config = readProjectConfig(tempDir);
@@ -771,7 +771,7 @@ context: |
         expect(consoleWarnSpy).not.toHaveBeenCalled();
       });
 
-      it('should return null when openspec directory does not exist', () => {
+      it('should return null when specorbit directory does not exist', () => {
         const config = readProjectConfig(tempDir);
 
         expect(config).toBeNull();
@@ -781,7 +781,7 @@ context: |
 
     describe('multi-line and special characters', () => {
       it('should preserve multi-line context', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -801,7 +801,7 @@ context: |
       });
 
       it('should preserve special YAML characters in context', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -822,7 +822,7 @@ context: |
       });
 
       it('should preserve special characters in rule strings', () => {
-        const configDir = path.join(tempDir, 'openspec');
+        const configDir = path.join(tempDir, 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
@@ -1000,7 +1000,7 @@ rules:
       const message = suggestSchemas('wrong-schema', availableSchemas);
 
       expect(message).toContain(
-        "Fix: Edit openspec/config.yaml and change 'schema: wrong-schema' to a valid schema name"
+        "Fix: Edit specorbit/config.yaml and change 'schema: wrong-schema' to a valid schema name"
       );
     });
 

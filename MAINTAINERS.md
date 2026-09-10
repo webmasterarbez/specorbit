@@ -1,6 +1,11 @@
 # Maintainers
 
-People who maintain and guide OpenSpec.
+> **Fork note:** SpecOrbit is maintained independently of upstream OpenSpec.
+> The people below guided the upstream project and are credited for the
+> foundation this fork builds on. The SpecOrbit fork maintainer
+> (TODO: add name/handle) is the decision-maker for this repository.
+
+People who maintain and guide SpecOrbit.
 
 ## Core Maintainers
 
@@ -13,7 +18,7 @@ People who maintain and guide OpenSpec.
 
 | Name | GitHub | Role |
 |------|--------|------|
-| Alfred | [@alfred-openspec](https://github.com/alfred-openspec) | Automation maintainer |
+| Alfred | [@alfred-specorbit](https://github.com/alfred-specorbit) | Automation maintainer |
 
 ## Advisors
 

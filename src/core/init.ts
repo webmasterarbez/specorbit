@@ -1,7 +1,7 @@
 /**
  * Init Command
  *
- * Sets up OpenSpec with Agent Skills and /opsx:* slash commands.
+ * Sets up SpecOrbit with Agent Skills and /orbit:* slash commands.
  * This is the unified setup command that replaces both the old init and experimental commands.
  */
 
@@ -12,17 +12,17 @@ import * as fs from 'fs';
 import { createRequire } from 'module';
 import { FileSystemUtils } from '../utils/file-system.js';
 import {
-  classifyOpenSpecDir,
+  classifySpecOrbitDir,
   MAX_CONTEXT_SIZE,
   readProjectConfig,
   storePointerProblem,
 } from './project-config.js';
 import { findRepoPlanningRootSync } from './planning-home.js';
-import { ANCHORED_OPENSPEC_DIRS, ensureDirectoryAnchor } from './openspec-root.js';
+import { ANCHORED_SPECORBIT_DIRS, ensureDirectoryAnchor } from './specorbit-root.js';
 import { getSkillReferenceTransformer, getTransformerForTool, usesNaturalLanguageSkillReferences } from '../utils/command-references.js';
 import {
   AI_TOOLS,
-  OPENSPEC_DIR_NAME,
+  SPECORBIT_DIR_NAME,
   AIToolOption,
   resolveToolIdAlias,
 } from './config.js';
@@ -87,7 +87,7 @@ import {
 } from './github-copilot/cloud-agent.js';
 
 const require = createRequire(import.meta.url);
-const { version: OPENSPEC_VERSION } = require('../../package.json');
+const { version: SPECORBIT_VERSION } = require('../../package.json');
 
 // -----------------------------------------------------------------------------
 // Constants
@@ -99,7 +99,7 @@ function formatLanguageContext(language: string): string {
   return [
     `Language: ${language}`,
     `All artifacts must be written in ${language}.`,
-    'Keep OpenSpec structural headings and SHALL/MUST keywords in English.',
+    'Keep SpecOrbit structural headings and SHALL/MUST keywords in English.',
   ].join('\n');
 }
 
@@ -109,18 +109,18 @@ const PROGRESS_SPINNER = {
 };
 
 const WORKFLOW_TO_SKILL_DIR: Record<string, string> = {
-  'explore': 'openspec-explore',
-  'new': 'openspec-new-change',
-  'continue': 'openspec-continue-change',
-  'apply': 'openspec-apply-change',
-  'update': 'openspec-update-change',
-  'ff': 'openspec-ff-change',
-  'sync': 'openspec-sync-specs',
-  'archive': 'openspec-archive-change',
-  'bulk-archive': 'openspec-bulk-archive-change',
-  'verify': 'openspec-verify-change',
-  'onboard': 'openspec-onboard',
-  'propose': 'openspec-propose',
+  'explore': 'specorbit-explore',
+  'new': 'specorbit-new-change',
+  'continue': 'specorbit-continue-change',
+  'apply': 'specorbit-apply-change',
+  'update': 'specorbit-update-change',
+  'ff': 'specorbit-ff-change',
+  'sync': 'specorbit-sync-specs',
+  'archive': 'specorbit-archive-change',
+  'bulk-archive': 'specorbit-bulk-archive-change',
+  'verify': 'specorbit-verify-change',
+  'onboard': 'specorbit-onboard',
+  'propose': 'specorbit-propose',
 };
 
 // -----------------------------------------------------------------------------
@@ -187,13 +187,13 @@ export class InitCommand {
 
   async execute(targetPath: string): Promise<void> {
     const projectPath = path.resolve(targetPath);
-    const openspecDir = OPENSPEC_DIR_NAME;
-    const openspecPath = path.join(projectPath, openspecDir);
+    const specorbitDir = SPECORBIT_DIR_NAME;
+    const specorbitPath = path.join(projectPath, specorbitDir);
 
     // Validation happens silently in the background
-    const extendMode = await this.validate(projectPath, openspecPath);
+    const extendMode = await this.validate(projectPath, specorbitPath);
 
-    // Pointer guard (slice 3.2): a config-only openspec/ with a store:
+    // Pointer guard (slice 3.2): a config-only specorbit/ with a store:
     // declaration is externalized planning, not a root to extend — and a
     // subdirectory of such a repo must not silently grow a nested root.
     // Refuse before legacy cleanup, migration, or prompts touch anything.
@@ -202,30 +202,30 @@ export class InitCommand {
     // refuse exactly where a normal command would resolve the pointer).
     const guardRoot = findRepoPlanningRootSync(projectPath);
     if (guardRoot) {
-      const { hasPlanningShape, pointer } = classifyOpenSpecDir(guardRoot);
+      const { hasPlanningShape, pointer } = classifySpecOrbitDir(guardRoot);
       if (!hasPlanningShape) {
         if (pointer.malformed) {
           throw new Error(
             `The store declaration in ${pointer.filePath} is invalid (` +
               storePointerProblem(pointer.malformed) +
-              `). Fix or remove the store: line before running openspec init.`
+              `). Fix or remove the store: line before running specorbit init.`
           );
         }
         if (pointer.value !== undefined) {
           throw new Error(
             `This repo's planning is externalized to store '${pointer.value}' (${pointer.filePath}). ` +
-              `Remove the store: line first to convert this repo to a local OpenSpec root.`
+              `Remove the store: line first to convert this repo to a local SpecOrbit root.`
           );
         }
       }
     }
 
-    await this.assertLanguageCanBeApplied(projectPath, openspecPath);
+    await this.assertLanguageCanBeApplied(projectPath, specorbitPath);
 
     // Check for legacy artifacts and handle cleanup
     const deferredLegacyCleanup = await this.handleLegacyCleanup(projectPath, extendMode);
 
-    // Migrate OpenSpec-managed skills left in renamed tool directories
+    // Migrate SpecOrbit-managed skills left in renamed tool directories
     // (e.g. .kimi -> .kimi-code) before detection so they stay recognized.
     migrateLegacyToolDirs(projectPath);
 
@@ -260,7 +260,7 @@ export class InitCommand {
     const validatedTools = this.validateTools(selectedToolIds, toolStates, projectPath);
 
     // Selecting a renamed tool is consent to leave its former directory:
-    // init is about to write the current one, and leaving OpenSpec content
+    // init is about to write the current one, and leaving SpecOrbit content
     // behind would give the user two installs of the same tool.
     for (const migration of migrateLegacyToolDirs(
       projectPath,
@@ -281,7 +281,7 @@ export class InitCommand {
     const copilotDecision = await this.resolveCopilotCloudDecision(projectPath, validatedTools);
 
     // Create directory structure and config
-    await this.createDirectoryStructure(openspecPath, extendMode);
+    await this.createDirectoryStructure(specorbitPath, extendMode);
 
     // Generate skills and commands for each tool
     const results = await this.generateSkillsAndCommands(
@@ -297,9 +297,9 @@ export class InitCommand {
     }
 
     // Create config.yaml if needed
-    const configStatus = await this.createConfig(openspecPath, extendMode);
+    const configStatus = await this.createConfig(specorbitPath, extendMode);
 
-    // Persist an explicit Copilot cloud decision so `openspec update` (which
+    // Persist an explicit Copilot cloud decision so `specorbit update` (which
     // never prompts) honors it. Best-effort: a config-write failure must not
     // fail an otherwise-successful init.
     if (copilotDecision.persist !== undefined) {
@@ -311,7 +311,7 @@ export class InitCommand {
     }
 
     // An explicit opt-out means "no cloud files here": clean up any that a
-    // previous run (or an older OpenSpec) generated. Only OpenSpec-managed
+    // previous run (or an older SpecOrbit) generated. Only SpecOrbit-managed
     // files are removed — a user-customized file is preserved.
     let copilotRemoved = 0;
     if (copilotDecision.optedOut) {
@@ -319,7 +319,7 @@ export class InitCommand {
         copilotRemoved = await removeCopilotCloudFiles(projectPath);
       } catch {
         // Non-fatal: removal targets files from a prior run; a failure here
-        // just leaves them for the next `openspec update` to clean up.
+        // just leaves them for the next `specorbit update` to clean up.
       }
     }
 
@@ -344,7 +344,7 @@ export class InitCommand {
     });
     if (results.failedTools.length > 0) {
       throw new Error(
-        `OpenSpec setup failed for: ${results.failedTools.map((tool) => tool.name).join(', ')}`
+        `SpecOrbit setup failed for: ${results.failedTools.map((tool) => tool.name).join(', ')}`
       );
     }
   }
@@ -355,9 +355,9 @@ export class InitCommand {
 
   private async validate(
     projectPath: string,
-    openspecPath: string
+    specorbitPath: string
   ): Promise<boolean> {
-    const extendMode = await FileSystemUtils.directoryExists(openspecPath);
+    const extendMode = await FileSystemUtils.directoryExists(specorbitPath);
 
     // Check write permissions
     if (!(await FileSystemUtils.ensureWritePermissions(projectPath))) {
@@ -428,7 +428,7 @@ export class InitCommand {
         message:
           'Set up GitHub Copilot cloud coding-agent files? This is for the GitHub-hosted ' +
           'Copilot coding agent (github.com), not Copilot in your editor. It writes two files: ' +
-          '.github/workflows/copilot-setup-steps.yml and .github/agents/openspec.agent.md.',
+          '.github/workflows/copilot-setup-steps.yml and .github/agents/specorbit.agent.md.',
         default: false,
       });
       return { write: answer, persist: answer, optedOut: !answer, skippedUndecided: false };
@@ -499,7 +499,7 @@ export class InitCommand {
 
     if (this.force || !canPrompt) {
       // --force flag or non-interactive mode: proceed with cleanup automatically.
-      // Legacy slash commands are 100% OpenSpec-managed, and config file cleanup
+      // Legacy slash commands are 100% SpecOrbit-managed, and config file cleanup
       // only removes markers (never deletes files), so auto-cleanup is safe.
       await this.performImmediateLegacyCleanup(projectPath, detection);
       return detection.globalSlashCommandFiles.length > 0 ? { detection } : null;
@@ -676,7 +676,7 @@ export class InitCommand {
       .map((toolId) => AI_TOOLS.find((t) => t.value === toolId)?.name || toolId);
 
     if (configuredNames.length > 0) {
-      console.log(`OpenSpec configured: ${configuredNames.join(', ')} (pre-selected)`);
+      console.log(`SpecOrbit configured: ${configuredNames.join(', ')} (pre-selected)`);
     }
 
     const detectedOnlyNames = detectedTools
@@ -856,42 +856,42 @@ export class InitCommand {
   // DIRECTORY STRUCTURE
   // ═══════════════════════════════════════════════════════════
 
-  private async createDirectoryStructure(openspecPath: string, extendMode: boolean): Promise<void> {
+  private async createDirectoryStructure(specorbitPath: string, extendMode: boolean): Promise<void> {
     const directories = [
-      openspecPath,
-      path.join(openspecPath, 'specs'),
-      path.join(openspecPath, 'changes'),
-      path.join(openspecPath, 'changes', 'archive'),
+      specorbitPath,
+      path.join(specorbitPath, 'specs'),
+      path.join(specorbitPath, 'changes'),
+      path.join(specorbitPath, 'changes', 'archive'),
     ];
 
     if (extendMode) {
       // In extend mode, just ensure directories exist without spinner
       for (const dir of directories) {
-        FileSystemUtils.assertProjectArtifactPath(path.dirname(openspecPath), dir);
+        FileSystemUtils.assertProjectArtifactPath(path.dirname(specorbitPath), dir);
         await FileSystemUtils.createDirectory(dir);
       }
-      await this.writeGitkeepFiles(openspecPath);
+      await this.writeGitkeepFiles(specorbitPath);
       return;
     }
 
-    const spinner = this.startSpinner('Creating OpenSpec structure...');
+    const spinner = this.startSpinner('Creating SpecOrbit structure...');
 
     for (const dir of directories) {
-      FileSystemUtils.assertProjectArtifactPath(path.dirname(openspecPath), dir);
+      FileSystemUtils.assertProjectArtifactPath(path.dirname(specorbitPath), dir);
       await FileSystemUtils.createDirectory(dir);
     }
 
-    await this.writeGitkeepFiles(openspecPath);
+    await this.writeGitkeepFiles(specorbitPath);
 
     spinner.stopAndPersist({
       symbol: PALETTE.white('▌'),
-      text: PALETTE.white('OpenSpec structure created'),
+      text: PALETTE.white('SpecOrbit structure created'),
     });
   }
 
-  private async writeGitkeepFiles(openspecPath: string): Promise<void> {
-    for (const relativeDir of ANCHORED_OPENSPEC_DIRS) {
-      await ensureDirectoryAnchor(path.dirname(openspecPath), relativeDir);
+  private async writeGitkeepFiles(specorbitPath: string): Promise<void> {
+    for (const relativeDir of ANCHORED_SPECORBIT_DIRS) {
+      await ensureDirectoryAnchor(path.dirname(specorbitPath), relativeDir);
     }
   }
 
@@ -961,7 +961,7 @@ export class InitCommand {
               resolveCommandSurfaceCapability(tool.value),
               resolveCommandInvocation(tool.value)
             );
-            const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
+            const skillContent = generateSkillContent(template, SPECORBIT_VERSION, transformer);
 
             // Write the skill file
             FileSystemUtils.assertPathWithin(tool.skillsRoot, skillFile);
@@ -1062,7 +1062,7 @@ export class InitCommand {
     const serializedContext = `${formatLanguageContext(normalized)}\n`;
     if (Buffer.byteLength(serializedContext, 'utf8') > MAX_CONTEXT_SIZE) {
       throw new Error(
-        `The --language option is too long for OpenSpec's ${MAX_CONTEXT_SIZE / 1024}KB project context limit.`
+        `The --language option is too long for SpecOrbit's ${MAX_CONTEXT_SIZE / 1024}KB project context limit.`
       );
     }
     return normalized;
@@ -1075,24 +1075,24 @@ export class InitCommand {
 
   private async assertLanguageCanBeApplied(
     projectPath: string,
-    openspecPath: string
+    specorbitPath: string
   ): Promise<void> {
     const languageContext = this.languageContext();
     if (!languageContext) return;
 
-    const configPath = path.join(openspecPath, 'config.yaml');
+    const configPath = path.join(specorbitPath, 'config.yaml');
     const hasConfig = fs.existsSync(configPath) ||
-      fs.existsSync(path.join(openspecPath, 'config.yml'));
+      fs.existsSync(path.join(specorbitPath, 'config.yml'));
     if (!hasConfig) {
       try {
         FileSystemUtils.assertProjectArtifactPath(projectPath, configPath);
       } catch (error) {
         const reason = error instanceof Error ? `: ${error.message}` : '';
-        throw new Error(`Cannot create openspec/config.yaml for --language${reason}`);
+        throw new Error(`Cannot create specorbit/config.yaml for --language${reason}`);
       }
       if (!(await FileSystemUtils.canWriteFile(configPath))) {
         throw new Error(
-          'Cannot create openspec/config.yaml for --language: the destination is not writable.'
+          'Cannot create specorbit/config.yaml for --language: the destination is not writable.'
         );
       }
       return;
@@ -1102,14 +1102,14 @@ export class InitCommand {
     if (existingContext?.includes(languageContext)) return;
 
     throw new Error(
-      '--language does not overwrite an existing OpenSpec config. ' +
+      '--language does not overwrite an existing SpecOrbit config. ' +
       'Add the language instruction to its context field instead.'
     );
   }
 
-  private async createConfig(openspecPath: string, extendMode: boolean): Promise<'created' | 'exists' | 'skipped'> {
-    const configPath = path.join(openspecPath, 'config.yaml');
-    const configYmlPath = path.join(openspecPath, 'config.yml');
+  private async createConfig(specorbitPath: string, extendMode: boolean): Promise<'created' | 'exists' | 'skipped'> {
+    const configPath = path.join(specorbitPath, 'config.yaml');
+    const configYmlPath = path.join(specorbitPath, 'config.yml');
     const configYamlExists = fs.existsSync(configPath);
     const configYmlExists = fs.existsSync(configYmlPath);
 
@@ -1123,13 +1123,13 @@ export class InitCommand {
         schema: DEFAULT_SCHEMA,
         context: this.languageContext(),
       });
-      FileSystemUtils.assertProjectArtifactPath(path.dirname(openspecPath), configPath);
+      FileSystemUtils.assertProjectArtifactPath(path.dirname(specorbitPath), configPath);
       await FileSystemUtils.writeFile(configPath, yamlContent);
       return 'created';
     } catch (error) {
       if (this.language) {
         const reason = error instanceof Error ? `: ${error.message}` : '';
-        throw new Error(`Failed to create openspec/config.yaml for --language${reason}`);
+        throw new Error(`Failed to create specorbit/config.yaml for --language${reason}`);
       }
       return 'skipped';
     }
@@ -1163,7 +1163,7 @@ export class InitCommand {
     console.log();
     console.log(
       chalk.bold(
-        results.failedTools.length > 0 ? 'OpenSpec Setup Incomplete' : 'OpenSpec Setup Complete'
+        results.failedTools.length > 0 ? 'SpecOrbit Setup Incomplete' : 'SpecOrbit Setup Complete'
       )
     );
     console.log();
@@ -1277,8 +1277,8 @@ export class InitCommand {
       if (copilot.collisions.length > 0) {
         console.log(
           chalk.dim(
-            `Left your existing ${copilot.collisions.join(' and ')} untouched — add the OpenSpec ` +
-              `install step by hand so the Copilot cloud agent can run openspec.`
+            `Left your existing ${copilot.collisions.join(' and ')} untouched — add the SpecOrbit ` +
+              `install step by hand so the Copilot cloud agent can run specorbit.`
           )
         );
       }
@@ -1288,7 +1288,7 @@ export class InitCommand {
       );
     } else if (copilotSucceeded && copilot.skippedUndecided) {
       console.log(
-        chalk.dim("Skipped GitHub Copilot cloud files (opt-in). Enable with 'openspec init --copilot-cloud'.")
+        chalk.dim("Skipped GitHub Copilot cloud files (opt-in). Enable with 'specorbit init --copilot-cloud'.")
       );
     }
 
@@ -1302,30 +1302,30 @@ export class InitCommand {
 
     // Config status
     if (configStatus === 'created') {
-      console.log(`Config: openspec/config.yaml (schema: ${DEFAULT_SCHEMA})`);
+      console.log(`Config: specorbit/config.yaml (schema: ${DEFAULT_SCHEMA})`);
     } else if (configStatus === 'exists') {
       // Show actual filename (config.yaml or config.yml)
-      const configYaml = path.join(projectPath, OPENSPEC_DIR_NAME, 'config.yaml');
-      const configYml = path.join(projectPath, OPENSPEC_DIR_NAME, 'config.yml');
+      const configYaml = path.join(projectPath, SPECORBIT_DIR_NAME, 'config.yaml');
+      const configYml = path.join(projectPath, SPECORBIT_DIR_NAME, 'config.yml');
       const configName = fs.existsSync(configYaml) ? 'config.yaml' : fs.existsSync(configYml) ? 'config.yml' : 'config.yaml';
-      console.log(`Config: openspec/${configName} (exists)`);
+      console.log(`Config: specorbit/${configName} (exists)`);
     } else {
       console.log(chalk.dim(`Config: skipped (non-interactive mode)`));
     }
 
     // Getting started (task 7.6: show propose if in profile)
     const activeWorkflows = this.getActiveWorkflows();
-    // When no tool got /opsx:* commands, point at the skill instead of a
+    // When no tool got /orbit:* commands, point at the skill instead of a
     // command that does not exist.
     const activeDelivery: Delivery = getGlobalConfig().delivery ?? 'both';
     const commandsGenerated = successfulTools.some((tool) => shouldGenerateCommandsForTool(tool.value, activeDelivery));
     const skillsGenerated = successfulTools.some((tool) => shouldGenerateSkillsForTool(tool.value, activeDelivery));
     // Each hint line must be a usable instruction for the tool it serves.
     // Tools that generated commands are told the command name their files
-    // answer to (/opsx:* when namespaced under opsx/, /opsx-* when the
+    // answer to (/orbit:* when namespaced under orbit/, /orbit-* when the
     // filename is the command); tools that only got skills are told their
-    // documented skill invocation (Kimi Code: /skill:openspec-*; Codex CLI:
-    // $openspec-*; others: /openspec-*). Tools that got no artifacts are
+    // documented skill invocation (Kimi Code: /skill:specorbit-*; Codex CLI:
+    // $specorbit-*; others: /specorbit-*). Tools that got no artifacts are
     // covered by the configuration correction instead. When the selection
     // disagrees, print one line per distinct instruction, labeled with the
     // tools it applies to.
@@ -1344,7 +1344,7 @@ export class InitCommand {
         } else if (shouldGenerateSkillsForTool(tool.value, activeDelivery)) {
           const skillReference = getSkillReferenceTransformer(tool.value)(command);
           // Tools with no slash surface (e.g. Rovo Dev) reference skills as
-          // prose ("the openspec-propose skill"); phrase the hint so it reads
+          // prose ("the specorbit-propose skill"); phrase the hint so it reads
           // as an instruction rather than a dead command with an argument.
           hint = usesNaturalLanguageSkillReferences(tool.value)
             ? `Start your first change: ask ${tool.name} to use ${skillReference} with "your idea"`
@@ -1385,7 +1385,7 @@ export class InitCommand {
         chalk.yellow(
           `No skills or commands were generated for ${names}: delivery is set to 'commands' but ` +
             `${zeroArtifactTools.length === 1 ? 'it supports' : 'they support'} only skills. ` +
-            `Run 'openspec config set delivery both' to generate skills.`
+            `Run 'specorbit config set delivery both' to generate skills.`
         )
       );
     }
@@ -1395,18 +1395,18 @@ export class InitCommand {
       // whole story, so don't advertise an invocation that doesn't exist.
       advertisedAnInvocation = false;
     } else if (activeWorkflows.includes('propose')) {
-      printStartHints('/opsx:propose');
+      printStartHints('/orbit:propose');
     } else if (activeWorkflows.includes('new')) {
-      printStartHints('/opsx:new');
+      printStartHints('/orbit:new');
     } else {
-      console.log("Done. Run 'openspec config profile' to configure your workflows.");
+      console.log("Done. Run 'specorbit config profile' to configure your workflows.");
       advertisedAnInvocation = false;
     }
 
     // Workflows the active profile left out. Setup is the only moment a user
     // is told what exists, so name them here rather than let a missing
     // command read as a broken install (#1076). Skipped when the branch above
-    // already pointed at `openspec config profile`, and when no tool received
+    // already pointed at `specorbit config profile`, and when no tool received
     // a workflow surface at all (no tools selected, or none that could take
     // one) — there, adding workflows writes nothing, so naming them would
     // point at the wrong problem.
@@ -1422,8 +1422,8 @@ export class InitCommand {
 
     // Links
     console.log();
-    console.log(`Learn more: ${chalk.cyan('https://github.com/Fission-AI/OpenSpec')}`);
-    console.log(`Feedback:   ${chalk.cyan('https://github.com/Fission-AI/OpenSpec/issues')}`);
+    console.log(`Learn more: ${chalk.cyan('https://github.com/specorbit/specorbit')}`);
+    console.log(`Feedback:   ${chalk.cyan('https://github.com/specorbit/specorbit/issues')}`);
 
     // Restart instruction for successfully configured IDE/editor-resident tools
     // with a supported surface under the active delivery. The rule and wording live in

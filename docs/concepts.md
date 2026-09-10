@@ -1,10 +1,10 @@
 # Concepts
 
-This guide explains the core ideas behind OpenSpec and how they fit together. For practical usage, see [Getting Started](getting-started.md) and [Workflows](workflows.md).
+This guide explains the core ideas behind SpecOrbit and how they fit together. For practical usage, see [Getting Started](getting-started.md) and [Workflows](workflows.md).
 
 ## Philosophy
 
-OpenSpec is built around four principles:
+SpecOrbit is built around four principles:
 
 ```
 fluid not rigid         — no phase gates, work on what makes sense
@@ -15,21 +15,21 @@ brownfield-first        — works with existing codebases, not just greenfield
 
 ### Why These Principles Matter
 
-**Fluid not rigid.** Traditional spec systems lock you into phases: first you plan, then you implement, then you're done. OpenSpec is more flexible — you can create artifacts in any order that makes sense for your work.
+**Fluid not rigid.** Traditional spec systems lock you into phases: first you plan, then you implement, then you're done. SpecOrbit is more flexible — you can create artifacts in any order that makes sense for your work.
 
-**Iterative not waterfall.** Requirements change. Understanding deepens. What seemed like a good approach at the start might not hold up after you see the codebase. OpenSpec embraces this reality.
+**Iterative not waterfall.** Requirements change. Understanding deepens. What seemed like a good approach at the start might not hold up after you see the codebase. SpecOrbit embraces this reality.
 
-**Easy not complex.** Some spec frameworks require extensive setup, rigid formats, or heavyweight processes. OpenSpec stays out of your way. Initialize in seconds, start working immediately, customize only if you need to.
+**Easy not complex.** Some spec frameworks require extensive setup, rigid formats, or heavyweight processes. SpecOrbit stays out of your way. Initialize in seconds, start working immediately, customize only if you need to.
 
-**Brownfield-first.** Most software work isn't building from scratch — it's modifying existing systems. OpenSpec's delta-based approach makes it easy to specify changes to existing behavior, not just describe new systems.
+**Brownfield-first.** Most software work isn't building from scratch — it's modifying existing systems. SpecOrbit's delta-based approach makes it easy to specify changes to existing behavior, not just describe new systems.
 
 ## The Big Picture
 
-OpenSpec organizes your work into two main areas:
+SpecOrbit organizes your work into two main areas:
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
-│                        openspec/                                   │
+│                        specorbit/                                   │
 │                                                                    │
 │   ┌─────────────────────┐      ┌───────────────────────────────┐   │
 │   │       specs/        │      │         changes/              │   │
@@ -56,7 +56,7 @@ Specs describe your system's behavior using structured requirements and scenario
 ### Structure
 
 ```
-openspec/specs/
+specorbit/specs/
 ├── auth/
 │   └── spec.md           # Authentication behavior
 ├── payments/
@@ -154,7 +154,7 @@ Quick test:
 
 ### Keep It Lightweight: Progressive Rigor
 
-OpenSpec aims to avoid bureaucracy. Use the lightest level that still makes the change verifiable.
+SpecOrbit aims to avoid bureaucracy. Use the lightest level that still makes the change verifiable.
 
 **Lite spec (default):**
 - Short behavior-first requirements
@@ -186,11 +186,11 @@ A change is a proposed modification to your system, packaged as a folder with ev
 ### Change Structure
 
 ```
-openspec/changes/add-dark-mode/
+specorbit/changes/add-dark-mode/
 ├── proposal.md           # Why and what
 ├── design.md             # How (technical approach)
 ├── tasks.md              # Implementation checklist
-├── .openspec.yaml        # Change metadata (optional): schema, created, skip_specs, retire_capabilities
+├── .specorbit.yaml        # Change metadata (optional): schema, created, skip_specs, retire_capabilities
 └── specs/                # Delta specs
     └── ui/
         └── spec.md       # What's changing in ui/spec.md
@@ -345,7 +345,7 @@ Tasks are the **implementation checklist** — concrete steps with checkboxes.
 
 ## Delta Specs
 
-Delta specs are the key concept that makes OpenSpec work for brownfield development. They describe **what's changing** rather than restating the entire spec.
+Delta specs are the key concept that makes SpecOrbit work for brownfield development. They describe **what's changing** rather than restating the entire spec.
 
 ### The Format
 
@@ -412,7 +412,7 @@ Schemas define the artifact types and their dependencies for a workflow.
 ### How Schemas Work
 
 ```yaml
-# openspec/schemas/spec-driven/schema.yaml
+# specorbit/schemas/spec-driven/schema.yaml
 name: spec-driven
 artifacts:
   - id: proposal
@@ -473,16 +473,16 @@ Create custom schemas for your team's workflow:
 
 ```bash
 # Create from scratch
-openspec schema init research-first
+specorbit schema init research-first
 
 # Or fork an existing one
-openspec schema fork spec-driven research-first
+specorbit schema fork spec-driven research-first
 ```
 
 **Example custom schema:**
 
 ```yaml
-# openspec/schemas/research-first/schema.yaml
+# specorbit/schemas/research-first/schema.yaml
 name: research-first
 artifacts:
   - id: research
@@ -509,7 +509,7 @@ Archiving completes a change by merging its delta specs into the main specs and 
 ```
 Before archive:
 
-openspec/
+specorbit/
 ├── specs/
 │   └── auth/
 │       └── spec.md ◄────────────────┐
@@ -525,7 +525,7 @@ openspec/
 
 After archive:
 
-openspec/
+specorbit/
 ├── specs/
 │   └── auth/
 │       └── spec.md        # Now includes 2FA requirements
@@ -560,30 +560,30 @@ openspec/
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                              OPENSPEC FLOW                                   │
+│                              SPECORBIT FLOW                                  │
 │                                                                              │
 │   ┌────────────────┐                                                         │
-│   │  1. START      │  /opsx:propose (core) or /opsx:new (expanded)           │
+│   │  1. START      │  /orbit:propose (core) or /orbit:new (expanded)           │
 │   │     CHANGE     │                                                         │
 │   └───────┬────────┘                                                         │
 │           │                                                                  │
 │           ▼                                                                  │
 │   ┌────────────────┐                                                         │
-│   │  2. CREATE     │  /opsx:ff or /opsx:continue (expanded workflow)         │
+│   │  2. CREATE     │  /orbit:ff or /orbit:continue (expanded workflow)         │
 │   │     ARTIFACTS  │  Creates proposal → specs → design → tasks              │
 │   │                │  (based on schema dependencies)                         │
 │   └───────┬────────┘                                                         │
 │           │                                                                  │
 │           ▼                                                                  │
 │   ┌────────────────┐                                                         │
-│   │  3. IMPLEMENT  │  /opsx:apply                                            │
+│   │  3. IMPLEMENT  │  /orbit:apply                                            │
 │   │     TASKS      │  Work through tasks, checking them off                  │
 │   │                │◄──── Update artifacts as you learn                      │
 │   └───────┬────────┘                                                         │
 │           │                                                                  │
 │           ▼                                                                  │
 │   ┌────────────────┐                                                         │
-│   │  4. VERIFY     │  /opsx:verify (optional)                                │
+│   │  4. VERIFY     │  /orbit:verify (optional)                                │
 │   │     WORK       │  Check implementation matches specs                     │
 │   └───────┬────────┘                                                         │
 │           │                                                                  │
@@ -619,7 +619,7 @@ openspec/
 | **Scenario** | A concrete example of a requirement, typically in Given/When/Then format |
 | **Schema** | A definition of artifact types and their dependencies |
 | **Spec** | A specification describing system behavior, containing requirements and scenarios |
-| **Source of truth** | The `openspec/specs/` directory, containing the current agreed-upon behavior |
+| **Source of truth** | The `specorbit/specs/` directory, containing the current agreed-upon behavior |
 
 ## Next Steps
 

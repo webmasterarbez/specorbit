@@ -4,7 +4,7 @@ import os from 'os';
 import path from 'path';
 import ora from 'ora';
 import { ValidateCommand, projectValidationFindings } from '../../src/commands/validate.js';
-import { resolveRootForCommand, toRootOutput, type ResolvedOpenSpecRoot } from '../../src/core/root-selection.js';
+import { resolveRootForCommand, toRootOutput, type ResolvedSpecOrbitRoot } from '../../src/core/root-selection.js';
 import { Validator } from '../../src/core/validation/validator.js';
 
 vi.mock('../../src/core/root-selection.js', async (importOriginal) => ({
@@ -17,7 +17,7 @@ type Options = NonNullable<Parameters<ValidateCommand['execute']>[1]>;
 
 describe('validate findings reports', () => {
   let directory: string;
-  let root: ResolvedOpenSpecRoot;
+  let root: ResolvedSpecOrbitRoot;
   let previousExitCode: typeof process.exitCode;
   let stdout: string[];
   let stderr: string[];
@@ -33,14 +33,14 @@ describe('validate findings reports', () => {
   }
 
   async function seed(): Promise<void> {
-    await write('openspec/changes/a-clean/specs/example/spec.md', delta());
-    await write('openspec/changes/b-warning/specs/example/spec.md', delta('The feature returns its documented result.'));
-    await write('openspec/changes/c-info/specs/example/spec.md', `${delta()}\n### Notes\nNon-requirement notes.\n`);
+    await write('specorbit/changes/a-clean/specs/example/spec.md', delta());
+    await write('specorbit/changes/b-warning/specs/example/spec.md', delta('The feature returns its documented result.'));
+    await write('specorbit/changes/c-info/specs/example/spec.md', `${delta()}\n### Notes\nNon-requirement notes.\n`);
     await fs.mkdir(path.join(root.changesDir, 'd-error'));
-    await write('openspec/specs/clean/spec.md', `## Purpose\nThis specification defines a deterministic example for testing validation output contracts.\n\n## Requirements\n${delta().replace('## ADDED Requirements\n', '')}`);
-    await write('openspec/specs/error/spec.md', '# Invalid specification\n');
-    await write('openspec/changes/archive/a-clean/tasks.md', '- [x] 1.1 Done\n');
-    await write('openspec/changes/archive/b-error/tasks.md', '- [ ] 1.1 Pending\n');
+    await write('specorbit/specs/clean/spec.md', `## Purpose\nThis specification defines a deterministic example for testing validation output contracts.\n\n## Requirements\n${delta().replace('## ADDED Requirements\n', '')}`);
+    await write('specorbit/specs/error/spec.md', '# Invalid specification\n');
+    await write('specorbit/changes/archive/a-clean/tasks.md', '- [x] 1.1 Done\n');
+    await write('specorbit/changes/archive/b-error/tasks.md', '- [ ] 1.1 Pending\n');
   }
 
   async function run(options: Options, item?: string) {
@@ -60,12 +60,12 @@ describe('validate findings reports', () => {
 
   beforeEach(async () => {
     previousExitCode = process.exitCode;
-    directory = await fs.mkdtemp(path.join(os.tmpdir(), 'openspec-findings-'));
+    directory = await fs.mkdtemp(path.join(os.tmpdir(), 'specorbit-findings-'));
     root = {
       path: directory,
-      changesDir: path.join(directory, 'openspec', 'changes'),
-      specsDir: path.join(directory, 'openspec', 'specs'),
-      archiveDir: path.join(directory, 'openspec', 'changes', 'archive'),
+      changesDir: path.join(directory, 'specorbit', 'changes'),
+      specsDir: path.join(directory, 'specorbit', 'specs'),
+      archiveDir: path.join(directory, 'specorbit', 'changes', 'archive'),
       defaultSchema: 'spec-driven',
       source: 'nearest',
     };
@@ -137,7 +137,7 @@ describe('validate findings reports', () => {
   });
 
   it.each([false, true])('preserves warning-only exit status without errors (strict=%s)', async (strict) => {
-    await write('openspec/changes/warning/specs/example/spec.md', delta('The feature returns its documented result.'));
+    await write('specorbit/changes/warning/specs/example/spec.md', delta('The feature returns its documented result.'));
     const full = await json({ changes: true, strict });
     const findings = await json({ changes: true, strict, report: 'findings' });
     expect(findings.document.itemFindings).toHaveLength(1);
@@ -146,7 +146,7 @@ describe('validate findings reports', () => {
   });
 
   it('keeps an INFO-only strict run successful while displaying its finding', async () => {
-    await write('openspec/changes/info/specs/example/spec.md', `${delta()}\n### Notes\nNon-requirement notes.\n`);
+    await write('specorbit/changes/info/specs/example/spec.md', `${delta()}\n### Notes\nNon-requirement notes.\n`);
     const findings = await json({ changes: true, strict: true, report: 'findings' });
     expect(findings.document.itemFindings).toHaveLength(1);
     expect(findings.document.itemFindings[0].issues[0].level).toBe('INFO');
@@ -159,7 +159,7 @@ describe('validate findings reports', () => {
     const human = await run({ all: true, report: 'findings' });
     expect(human.stdout[0]).toMatch(/^Scope:/);
     expect(human.stdout[1]).toMatch(/^Totals:/);
-    expect(human.stdout[2]).toMatch(/^Details: openspec validate d-error --type change/);
+    expect(human.stdout[2]).toMatch(/^Details: specorbit validate d-error --type change/);
     expect(human.stdout).toHaveLength(3);
     const errorText = human.stderr.join('\n');
     expect(errorText).not.toContain('change/a-clean');
@@ -199,7 +199,7 @@ describe('validate findings reports', () => {
   });
 
   it('distinguishes a clean non-empty scope from an empty scope', async () => {
-    await write('openspec/changes/clean/specs/example/spec.md', delta());
+    await write('specorbit/changes/clean/specs/example/spec.md', delta());
     const result = await json({ changes: true, report: 'findings' });
     expect(result.document.report).toMatchObject({ returnedItems: 0, totalItems: 1, scope: 'changes' });
     expect(result.document.itemFindings).toEqual([]);

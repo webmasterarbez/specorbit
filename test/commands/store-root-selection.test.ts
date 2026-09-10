@@ -10,7 +10,7 @@ import {
 import { writeStoreMetadataState } from '../../src/core/store/foundation.js';
 import { runCLI, type RunCLIResult } from '../helpers/run-cli.js';
 import { cleanupTempPath } from '../helpers/temp-cleanup.js';
-import { writeSpec } from '../helpers/openspec-fixtures.js';
+import { writeSpec } from '../helpers/specorbit-fixtures.js';
 
 const VALID_DELTA_SPEC = `## ADDED Requirements
 
@@ -56,13 +56,13 @@ describe('store root selection for normal commands', () => {
 
   beforeEach(async () => {
     tempDir = fs.realpathSync.native(
-      fs.mkdtempSync(path.join(os.tmpdir(), 'openspec-store-root-selection-'))
+      fs.mkdtempSync(path.join(os.tmpdir(), 'specorbit-store-root-selection-'))
     );
     env = {
       XDG_DATA_HOME: path.join(tempDir, 'data'),
       XDG_CONFIG_HOME: path.join(tempDir, 'config'),
       OPEN_SPEC_INTERACTIVE: '0',
-      OPENSPEC_TELEMETRY: '0',
+      SPECORBIT_TELEMETRY: '0',
     };
     globalDataDir = getGlobalDataDir({ env });
     appRepo = path.join(tempDir, 'app-repo');
@@ -74,15 +74,15 @@ describe('store root selection for normal commands', () => {
     cleanupTempPath(tempDir);
   });
 
-  function createOpenSpecRoot(rootDir: string): void {
-    fs.mkdirSync(path.join(rootDir, 'openspec', 'specs'), { recursive: true });
-    fs.mkdirSync(path.join(rootDir, 'openspec', 'changes', 'archive'), { recursive: true });
-    fs.writeFileSync(path.join(rootDir, 'openspec', 'config.yaml'), 'schema: spec-driven\n');
+  function createSpecOrbitRoot(rootDir: string): void {
+    fs.mkdirSync(path.join(rootDir, 'specorbit', 'specs'), { recursive: true });
+    fs.mkdirSync(path.join(rootDir, 'specorbit', 'changes', 'archive'), { recursive: true });
+    fs.writeFileSync(path.join(rootDir, 'specorbit', 'config.yaml'), 'schema: spec-driven\n');
   }
 
   async function registerStoreFixture(id: string): Promise<string> {
     const root = path.join(tempDir, 'stores', id);
-    createOpenSpecRoot(root);
+    createSpecOrbitRoot(root);
     await registerStore({ id, localPath: root, globalDataDir });
     return fs.realpathSync.native(root);
   }
@@ -92,7 +92,7 @@ describe('store root selection for normal commands', () => {
     name: string,
     options: { deltaSpec?: string | null; tasksDone?: boolean } = {}
   ): string {
-    const changeDir = path.join(rootDir, 'openspec', 'changes', name);
+    const changeDir = path.join(rootDir, 'specorbit', 'changes', name);
     fs.mkdirSync(changeDir, { recursive: true });
     fs.writeFileSync(
       path.join(changeDir, 'proposal.md'),
@@ -120,8 +120,8 @@ describe('store root selection for normal commands', () => {
     }
   }
 
-  function expectNoLocalOpenSpec(): void {
-    expect(fs.existsSync(path.join(appRepo, 'openspec'))).toBe(false);
+  function expectNoLocalSpecOrbit(): void {
+    expect(fs.existsSync(path.join(appRepo, 'specorbit'))).toBe(false);
   }
 
   it.each(['local', 'store', 'declared', 'global_default'] as const)(
@@ -130,12 +130,12 @@ describe('store root selection for normal commands', () => {
       const selectedRoot = source === 'local' ? appRepo : storeRoot;
       const storeArgs = source === 'store' ? ['--store', 'team-context'] : [];
       if (source === 'local' || source === 'store') {
-        createOpenSpecRoot(appRepo);
+        createSpecOrbitRoot(appRepo);
       } else if (source === 'declared') {
-        fs.mkdirSync(path.join(appRepo, 'openspec'), { recursive: true });
-        fs.writeFileSync(path.join(appRepo, 'openspec', 'config.yaml'), 'store: team-context\n');
+        fs.mkdirSync(path.join(appRepo, 'specorbit'), { recursive: true });
+        fs.writeFileSync(path.join(appRepo, 'specorbit', 'config.yaml'), 'store: team-context\n');
       } else {
-        const configDir = path.join(tempDir, 'config', 'openspec');
+        const configDir = path.join(tempDir, 'config', 'specorbit');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(path.join(configDir, 'config.json'), JSON.stringify({ defaultStore: 'team-context' }));
       }
@@ -197,16 +197,16 @@ describe('store root selection for normal commands', () => {
         env,
       });
       expect(result.exitCode).toBe(0);
-      expect(result.stderr).toContain(`Using OpenSpec root: team-context (${storeRoot})`);
+      expect(result.stderr).toContain(`Using SpecOrbit root: team-context (${storeRoot})`);
       expect(result.stdout).toContain("Created change 'add-billing'");
       expect(result.stdout).toContain(
-        path.join(storeRoot, 'openspec', 'changes', 'add-billing')
+        path.join(storeRoot, 'specorbit', 'changes', 'add-billing')
       );
 
       expect(
-        fs.existsSync(path.join(storeRoot, 'openspec', 'changes', 'add-billing'))
+        fs.existsSync(path.join(storeRoot, 'specorbit', 'changes', 'add-billing'))
       ).toBe(true);
-      expectNoLocalOpenSpec();
+      expectNoLocalSpecOrbit();
     });
 
     it('includes the shared root block and absolute paths in new change JSON', async () => {
@@ -224,14 +224,14 @@ describe('store root selection for normal commands', () => {
       });
       expect(path.isAbsolute(json.change.path)).toBe(true);
       expect(json.change.path).toBe(
-        path.join(storeRoot, 'openspec', 'changes', 'add-billing')
+        path.join(storeRoot, 'specorbit', 'changes', 'add-billing')
       );
-      expectNoLocalOpenSpec();
+      expectNoLocalSpecOrbit();
     });
 
     it('wins over the nearest local root', async () => {
       const localRepo = path.join(tempDir, 'local-repo');
-      createOpenSpecRoot(localRepo);
+      createSpecOrbitRoot(localRepo);
       createChange(localRepo, 'local-change');
       createChange(storeRoot, 'store-change');
 
@@ -250,9 +250,9 @@ describe('store root selection for normal commands', () => {
 
     it('lists an empty team store before any changes exist', async () => {
       const blankStoreRoot = path.join(tempDir, 'stores', 'blank-context');
-      fs.mkdirSync(path.join(blankStoreRoot, 'openspec'), { recursive: true });
+      fs.mkdirSync(path.join(blankStoreRoot, 'specorbit'), { recursive: true });
       fs.writeFileSync(
-        path.join(blankStoreRoot, 'openspec', 'config.yaml'),
+        path.join(blankStoreRoot, 'specorbit', 'config.yaml'),
         'schema: spec-driven\n'
       );
       await writeStoreMetadataState(blankStoreRoot, {
@@ -339,13 +339,13 @@ describe('store root selection for normal commands', () => {
       expect(validateJson.items[0]).toMatchObject({ id: 'store-change', valid: true });
       expect(validateJson.root.store_id).toBe('team-context');
 
-      expectNoLocalOpenSpec();
+      expectNoLocalSpecOrbit();
     });
 
     it('loads apply and archive operation inputs from the selected store root', async () => {
       createChange(storeRoot, 'store-change');
       fs.writeFileSync(
-        path.join(storeRoot, 'openspec', 'config.yaml'),
+        path.join(storeRoot, 'specorbit', 'config.yaml'),
         `schema: spec-driven
 context: Store context
 operations:
@@ -379,7 +379,7 @@ operations:
         operationGuidance: ['Store archive guidance'],
         root: { path: storeRoot, store_id: 'team-context' },
       });
-      expectNoLocalOpenSpec();
+      expectNoLocalSpecOrbit();
     });
 
     it('runs bulk validation against the selected store', async () => {
@@ -409,19 +409,19 @@ operations:
       expect(json.archive.change).toBe('store-change');
       expect(json.archive.archivedAs).toMatch(/^\d{4}-\d{2}-\d{2}-store-change$/);
       expect(json.archive.path).toBe(
-        path.join(storeRoot, 'openspec', 'changes', 'archive', json.archive.archivedAs)
+        path.join(storeRoot, 'specorbit', 'changes', 'archive', json.archive.archivedAs)
       );
       expect(json.archive.specsUpdated).toBe(true);
       expect(json.root.store_id).toBe('team-context');
 
       expect(fs.existsSync(json.archive.path)).toBe(true);
       expect(
-        fs.existsSync(path.join(storeRoot, 'openspec', 'changes', 'store-change'))
+        fs.existsSync(path.join(storeRoot, 'specorbit', 'changes', 'store-change'))
       ).toBe(false);
       expect(
-        fs.existsSync(path.join(storeRoot, 'openspec', 'specs', 'billing', 'spec.md'))
+        fs.existsSync(path.join(storeRoot, 'specorbit', 'specs', 'billing', 'spec.md'))
       ).toBe(true);
-      expectNoLocalOpenSpec();
+      expectNoLocalSpecOrbit();
     });
   });
 
@@ -435,21 +435,21 @@ operations:
       });
       expect(result.exitCode).toBe(0);
       expect(result.stdout.startsWith('## Why')).toBe(true);
-      expect(result.stderr).toContain(`Using OpenSpec root: team-context (${storeRoot})`);
+      expect(result.stderr).toContain(`Using SpecOrbit root: team-context (${storeRoot})`);
     });
 
     it('diffs a delta against the selected store\'s main specs', async () => {
       // A same-named capability sits in the cwd repo with different text. If
       // --diff resolved main specs against the cwd instead of the store root,
       // the diff below would be computed from this decoy.
-      fs.mkdirSync(path.join(appRepo, 'openspec', 'specs', 'billing'), { recursive: true });
+      fs.mkdirSync(path.join(appRepo, 'specorbit', 'specs', 'billing'), { recursive: true });
       fs.writeFileSync(
-        path.join(appRepo, 'openspec', 'specs', 'billing', 'spec.md'),
+        path.join(appRepo, 'specorbit', 'specs', 'billing', 'spec.md'),
         '# billing Specification\n\n## Purpose\nDecoy.\n\n## Requirements\n### Requirement: Billing SHALL work\nThe system SHALL create decoy bills.\n\n#### Scenario: Creates bills\n- **WHEN** a billing period ends\n- **THEN** a decoy bill is created\n'
       );
-      fs.mkdirSync(path.join(storeRoot, 'openspec', 'specs', 'billing'), { recursive: true });
+      fs.mkdirSync(path.join(storeRoot, 'specorbit', 'specs', 'billing'), { recursive: true });
       fs.writeFileSync(
-        path.join(storeRoot, 'openspec', 'specs', 'billing', 'spec.md'),
+        path.join(storeRoot, 'specorbit', 'specs', 'billing', 'spec.md'),
         '# billing Specification\n\n## Purpose\nBilling.\n\n## Requirements\n### Requirement: Billing SHALL work\nThe system SHALL create bills.\n\n#### Scenario: Creates bills\n- **WHEN** a billing period ends\n- **THEN** a bill is created\n'
       );
       createChange(storeRoot, 'store-change', {
@@ -476,7 +476,7 @@ operations:
       );
       expect(result.exitCode).toBe(0);
       expect(result.stdout.startsWith('<artifact id="design"')).toBe(true);
-      expect(result.stderr).toContain('Using OpenSpec root: team-context');
+      expect(result.stderr).toContain('Using SpecOrbit root: team-context');
     });
 
     it('writes the status banner to stderr in human mode', async () => {
@@ -487,9 +487,9 @@ operations:
         { cwd: appRepo, env }
       );
       expect(result.exitCode).toBe(0);
-      expect(result.stderr).toContain(`Using OpenSpec root: team-context (${storeRoot})`);
+      expect(result.stderr).toContain(`Using SpecOrbit root: team-context (${storeRoot})`);
       expect(result.stdout).toContain('Change: store-change');
-      expect(result.stdout).not.toContain('Using OpenSpec root');
+      expect(result.stdout).not.toContain('Using SpecOrbit root');
     });
   });
 
@@ -503,8 +503,8 @@ operations:
       const output = result.stdout + result.stderr;
       expect(output).toContain('store register');
       expect(output).toContain('--store <id>');
-      expectNoLocalOpenSpec();
-      expect(fs.existsSync(path.join(storeRoot, 'openspec', 'changes', 'nope'))).toBe(false);
+      expectNoLocalSpecOrbit();
+      expect(fs.existsSync(path.join(storeRoot, 'specorbit', 'changes', 'nope'))).toBe(false);
     });
 
     it('rejects show --store-path despite allowUnknownOption', async () => {
@@ -579,7 +579,7 @@ operations:
       expect(result.exitCode).toBe(1);
       expect(result.stdout + result.stderr).toContain('store doctor');
       // No scaffolding or repair happened.
-      expect(fs.existsSync(path.join(brokenRoot, 'openspec'))).toBe(false);
+      expect(fs.existsSync(path.join(brokenRoot, 'specorbit'))).toBe(false);
     });
   });
 
@@ -590,14 +590,14 @@ operations:
       const output = result.stdout + result.stderr;
       expect(output).toContain('team-context');
       expect(output).toContain('--store <id>');
-      expect(output).toContain('openspec init');
-      expectNoLocalOpenSpec();
+      expect(output).toContain('specorbit init');
+      expectNoLocalSpecOrbit();
     });
 
     it('treats leftover workspace state as no root at all', async () => {
-      fs.mkdirSync(path.join(appRepo, '.openspec-workspace'), { recursive: true });
+      fs.mkdirSync(path.join(appRepo, '.specorbit-workspace'), { recursive: true });
       fs.writeFileSync(
-        path.join(appRepo, '.openspec-workspace', 'view.yaml'),
+        path.join(appRepo, '.specorbit-workspace', 'view.yaml'),
         'version: 1\nname: platform\ncontext: null\nlinks: {}\n'
       );
 
@@ -608,10 +608,10 @@ operations:
 
     it('ignores leftover workspace state when a nearby root exists', async () => {
       const localRepo = path.join(tempDir, 'workspace-repo');
-      createOpenSpecRoot(localRepo);
-      fs.mkdirSync(path.join(localRepo, '.openspec-workspace'), { recursive: true });
+      createSpecOrbitRoot(localRepo);
+      fs.mkdirSync(path.join(localRepo, '.specorbit-workspace'), { recursive: true });
       fs.writeFileSync(
-        path.join(localRepo, '.openspec-workspace', 'view.yaml'),
+        path.join(localRepo, '.specorbit-workspace', 'view.yaml'),
         'version: 1\nname: platform\ncontext: null\nlinks: {}\n'
       );
       createChange(localRepo, 'local-change');
@@ -658,8 +658,8 @@ operations:
         ...env,
         XDG_DATA_HOME: path.join(tempDir, 'data-empty'),
       };
-      fs.mkdirSync(path.join(appRepo, 'openspec'), { recursive: true });
-      fs.writeFileSync(path.join(appRepo, 'openspec', 'project.md'), '# Project\n');
+      fs.mkdirSync(path.join(appRepo, 'specorbit'), { recursive: true });
+      fs.writeFileSync(path.join(appRepo, 'specorbit', 'project.md'), '# Project\n');
 
       const result = await runCLI(['list', '--json'], { cwd: appRepo, env: isolatedEnv });
       expect(result.exitCode).toBe(0);
@@ -690,7 +690,7 @@ operations:
         expect(result.exitCode).toBe(1);
         expect(result.stdout).toBe('');
         expect(result.stderr).toContain(
-          'Error: No OpenSpec root found from the current directory.'
+          'Error: No SpecOrbit root found from the current directory.'
         );
         expect(result.stderr).not.toContain('No items found to validate.');
         expect(result.stderr).not.toContain('No active changes found.');
@@ -725,8 +725,8 @@ operations:
         expect(json.status[0]).toEqual(
           expect.objectContaining({
             severity: 'error',
-            code: 'no_openspec_root',
-            message: 'No OpenSpec root found from the current directory.',
+            code: 'no_specorbit_root',
+            message: 'No SpecOrbit root found from the current directory.',
           })
         );
       }
@@ -737,7 +737,7 @@ operations:
         ...env,
         XDG_DATA_HOME: path.join(tempDir, 'data-empty'),
       };
-      createOpenSpecRoot(appRepo);
+      createSpecOrbitRoot(appRepo);
 
       const result = await runCLI(['validate', '--all', '--json'], {
         cwd: appRepo,
@@ -767,7 +767,7 @@ operations:
       });
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain("Unknown item 'missing'.");
-      expect(result.stderr).not.toContain('No OpenSpec root found');
+      expect(result.stderr).not.toContain('No SpecOrbit root found');
     });
   });
 
@@ -788,9 +788,9 @@ operations:
 
     it('reports no active changes for a selected empty store without init guidance', async () => {
       const blankStoreRoot = path.join(tempDir, 'stores', 'archive-blank-context');
-      fs.mkdirSync(path.join(blankStoreRoot, 'openspec'), { recursive: true });
+      fs.mkdirSync(path.join(blankStoreRoot, 'specorbit'), { recursive: true });
       fs.writeFileSync(
-        path.join(blankStoreRoot, 'openspec', 'config.yaml'),
+        path.join(blankStoreRoot, 'specorbit', 'config.yaml'),
         'schema: spec-driven\n'
       );
       await writeStoreMetadataState(blankStoreRoot, {
@@ -831,7 +831,7 @@ operations:
       expect(json.status[0].code).toBe('archive_validation_failed');
       // The change was not archived.
       expect(
-        fs.existsSync(path.join(storeRoot, 'openspec', 'changes', 'bad-change'))
+        fs.existsSync(path.join(storeRoot, 'specorbit', 'changes', 'bad-change'))
       ).toBe(true);
     });
 
@@ -862,7 +862,7 @@ operations:
         fs.mkdirSync(specDir, { recursive: true });
         fs.writeFileSync(path.join(specDir, 'spec.md'), VALID_DELTA_SPEC);
       }
-      const badTargetDir = path.join(storeRoot, 'openspec', 'specs', 'zzz-bad');
+      const badTargetDir = path.join(storeRoot, 'specorbit', 'specs', 'zzz-bad');
       fs.mkdirSync(badTargetDir, { recursive: true });
       const badTargetContent =
         '# zzz-bad\n\n## Purpose\nLegacy.\n\n## Requirements\n\n### Requirement: Old rule SHALL hold\nThe system SHALL hold.\n';
@@ -880,13 +880,13 @@ operations:
       // "No files were changed" must be true: the good spec was not created
       // and the bad target is byte-identical.
       expect(
-        fs.existsSync(path.join(storeRoot, 'openspec', 'specs', 'aaa-good', 'spec.md'))
+        fs.existsSync(path.join(storeRoot, 'specorbit', 'specs', 'aaa-good', 'spec.md'))
       ).toBe(false);
       expect(fs.readFileSync(path.join(badTargetDir, 'spec.md'), 'utf-8')).toBe(
         badTargetContent
       );
       expect(
-        fs.existsSync(path.join(storeRoot, 'openspec', 'changes', 'two-spec-change'))
+        fs.existsSync(path.join(storeRoot, 'specorbit', 'changes', 'two-spec-change'))
       ).toBe(true);
     });
 
@@ -903,7 +903,7 @@ operations:
       expect(json.archive).toBeNull();
       expect(json.status[0].code).toBe('archive_spec_update_failed');
       expect(
-        fs.existsSync(path.join(storeRoot, 'openspec', 'changes', 'modified-change'))
+        fs.existsSync(path.join(storeRoot, 'specorbit', 'changes', 'modified-change'))
       ).toBe(true);
     });
 
@@ -918,7 +918,7 @@ operations:
       const json = parseJson(result);
       expect(json.status[0].code).toMatch(/archive_tasks_incomplete|archive_confirmation_required/);
       expect(
-        fs.existsSync(path.join(storeRoot, 'openspec', 'changes', 'wip-change'))
+        fs.existsSync(path.join(storeRoot, 'specorbit', 'changes', 'wip-change'))
       ).toBe(true);
     });
   });
@@ -926,7 +926,7 @@ operations:
   describe('initiative links are retired from normal change flows', () => {
     it('rejects --initiative and creates no files', async () => {
       const localRepo = path.join(tempDir, 'initiative-repo');
-      createOpenSpecRoot(localRepo);
+      createSpecOrbitRoot(localRepo);
 
       const result = await runCLI(
         ['new', 'change', 'linked-change', '--initiative', 'billing-launch'],
@@ -936,20 +936,20 @@ operations:
       const output = result.stdout + result.stderr;
       expect(output).toContain('--initiative is no longer supported');
       expect(
-        fs.existsSync(path.join(localRepo, 'openspec', 'changes', 'linked-change'))
+        fs.existsSync(path.join(localRepo, 'specorbit', 'changes', 'linked-change'))
       ).toBe(false);
     });
 
-    it('removes openspec set change entirely', async () => {
+    it('removes specorbit set change entirely', async () => {
       const localRepo = path.join(tempDir, 'set-change-repo');
-      createOpenSpecRoot(localRepo);
+      createSpecOrbitRoot(localRepo);
       createChange(localRepo, 'existing-change');
       const metadataPath = path.join(
         localRepo,
-        'openspec',
+        'specorbit',
         'changes',
         'existing-change',
-        '.openspec.yaml'
+        '.specorbit.yaml'
       );
 
       const result = await runCLI(
@@ -961,7 +961,7 @@ operations:
       expect(fs.existsSync(metadataPath)).toBe(false);
 
       const help = await runCLI(['--help'], { cwd: localRepo, env });
-      expect(help.stdout).not.toContain('Set checked-in OpenSpec metadata');
+      expect(help.stdout).not.toContain('Set checked-in SpecOrbit metadata');
       expect(help.stdout).not.toMatch(/^\s*set\s/m);
     });
   });
@@ -973,12 +973,12 @@ operations:
         { cwd: appRepo, env }
       );
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('openspec new change <change-id> --store fresh-context');
+      expect(result.stdout).toContain('specorbit new change <change-id> --store fresh-context');
     });
 
     it('shows --store usage after register', async () => {
       const registerRoot = path.join(tempDir, 'register-context');
-      createOpenSpecRoot(registerRoot);
+      createSpecOrbitRoot(registerRoot);
       await writeStoreMetadataState(registerRoot, {
         version: 1,
         id: 'register-context',
@@ -989,7 +989,7 @@ operations:
         env,
       });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('openspec new change <change-id> --store register-context');
+      expect(result.stdout).toContain('specorbit new change <change-id> --store register-context');
     });
   });
 });

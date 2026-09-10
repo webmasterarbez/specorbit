@@ -27,7 +27,7 @@ import {
   withStoreFlag,
   toPlanningHome,
   toRootOutput,
-  type ResolvedOpenSpecRoot,
+  type ResolvedSpecOrbitRoot,
 } from '../../core/root-selection.js';
 import {
   assembleReferenceIndex,
@@ -82,7 +82,7 @@ export type ArchiveInstructionsOptions = ApplyInstructionsOptions;
  * index when references are declared, and resolves the config path for
  * fix text. Shared by both instruction surfaces.
  */
-async function loadRootConfigContext(root: ResolvedOpenSpecRoot): Promise<{
+async function loadRootConfigContext(root: ResolvedSpecOrbitRoot): Promise<{
   projectConfig: ProjectConfig | null;
   references: ReferenceIndexEntry[] | undefined;
 }> {
@@ -127,7 +127,7 @@ export async function instructionsCommand(
       options.change,
       projectRoot,
       root.changesDir,
-      { newChangeHint: withStoreFlag(root, 'openspec new change <name>') }
+      { newChangeHint: withStoreFlag(root, 'specorbit new change <name>') }
     );
 
     // Validate schema if explicitly provided
@@ -207,7 +207,7 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
   // validate then rejects as conflicting with the marker.
   if (instructions.skipped) {
     console.log('<warning>');
-    console.log(instructions.warning ?? 'This artifact is skipped (skip_specs is set in .openspec.yaml).');
+    console.log(instructions.warning ?? 'This artifact is skipped (skip_specs is set in .specorbit.yaml).');
     console.log('</warning>');
     console.log();
     console.log('</artifact>');
@@ -333,7 +333,7 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
  * agent to act on and tick off, and a bare `- [ ]` gives it nothing to match.
  * It still counts toward progress, which is taken from every parsed line, so
  * this list can be shorter than the totals beside it but never disagrees with
- * `openspec list` or archive about how much work is left. An empty list is also
+ * `specorbit list` or archive about how much work is left. An empty list is also
  * what puts apply in its "nothing to work on" state, so a file of nothing but
  * text-less checkboxes asks to be rewritten instead of being called done.
  */
@@ -355,7 +355,7 @@ function toTaskItems(parsed: ParsedTask[]): TaskItem[] {
 /**
  * The command that builds one artifact.
  *
- * Every earlier remedy here named the `openspec-continue-change` skill, which
+ * Every earlier remedy here named the `specorbit-continue-change` skill, which
  * the `core` profile never installs - the advice was a dead end for the default
  * install. The CLI verb exists on every profile and is what the skill runs.
  */
@@ -367,8 +367,8 @@ function describeArtifactRemedy(
   const target = artifactId ?? '<artifact>';
   const verb = options.many ? 'Create each with' : 'Create it with';
   return (
-    `${verb} \`openspec instructions ${target} --change ${changeName}\`` +
-    ` (\`openspec status --change ${changeName}\` shows what is left).`
+    `${verb} \`specorbit instructions ${target} --change ${changeName}\`` +
+    ` (\`specorbit status --change ${changeName}\` shows what is left).`
   );
 }
 
@@ -391,7 +391,7 @@ function findArtifactIdFor(
  * takes that literally writes the tracking file straight from the proposal and
  * skips the artifacts in between - the failure reported in #834 and #869.
  * Walking `requires` names the whole chain, the same set and order
- * `openspec status` already prints, without changing what apply blocks on.
+ * `specorbit status` already prints, without changing what apply blocks on.
  */
 function collectMissingPrerequisites(input: {
   requiredArtifactIds: string[];
@@ -428,7 +428,7 @@ function collectMissingPrerequisites(input: {
  *
  * Apply gates on the schema's `apply.requires` only, so a change whose tasks
  * file was written ahead of its specs reads as ready even though no delta spec
- * exists - the state `openspec validate` rejects. Blocking here would be a
+ * exists - the state `specorbit validate` rejects. Blocking here would be a
  * policy change; naming the gap is not, and it is what keeps apply from being
  * the one surface that green-lights a change every other surface flags.
  *
@@ -460,14 +460,14 @@ function collectApplyWarnings(input: {
   const metadataPath = path.join(changeDir, METADATA_FILENAME);
   // The command names the artifact this schema actually declares, never the
   // literal `specs`. A schema whose spec-producing artifact is `contracts` was
-  // told to run `openspec instructions specs`, an artifact it does not have,
+  // told to run `specorbit instructions specs`, an artifact it does not have,
   // so the warning dead-ended at the exact step meant to resolve it. With more
   // than one such artifact there is no single right answer, so the id becomes
   // a placeholder rather than a guess.
   const specTarget = specArtifacts.length === 1 ? specArtifacts[0].id : '<artifact-id>';
   return [
-    `This change has no delta specs and does not declare \`skip_specs: true\`, so \`openspec validate ${changeName}\` fails on it. ` +
-      `Write the delta specs before implementing (\`openspec instructions ${specTarget} --change ${changeName}\`), ` +
+    `This change has no delta specs and does not declare \`skip_specs: true\`, so \`specorbit validate ${changeName}\` fails on it. ` +
+      `Write the delta specs before implementing (\`specorbit instructions ${specTarget} --change ${changeName}\`), ` +
       `or add \`skip_specs: true\` to ${metadataPath} if this change really changes no specified behavior.`,
   ];
 }
@@ -556,7 +556,7 @@ export async function generateApplyInstructions(
   const tasks = toTaskItems(parsedTasks);
 
   // Calculate progress over every checkbox in the file, listed or not, so these
-  // numbers match `openspec list` and archive's incomplete-task check.
+  // numbers match `specorbit list` and archive's incomplete-task check.
   const total = parsedTasks.length;
   const complete = parsedTasks.filter((task) => task.done).length;
   const remaining = total - complete;
@@ -649,7 +649,7 @@ export async function applyInstructionsCommand(options: ApplyInstructionsOptions
       options.change,
       projectRoot,
       root.changesDir,
-      { newChangeHint: withStoreFlag(root, 'openspec new change <name>') }
+      { newChangeHint: withStoreFlag(root, 'specorbit new change <name>') }
     );
 
     // Validate schema if explicitly provided
@@ -783,7 +783,7 @@ export async function archiveInstructionsCommand(
       options.change,
       root.path,
       root.changesDir,
-      { newChangeHint: withStoreFlag(root, 'openspec new change <name>') }
+      { newChangeHint: withStoreFlag(root, 'specorbit new change <name>') }
     );
     const projectConfig = readProjectConfig(root.path);
     const instructions = generateArchiveInstructions(changeName, projectConfig);

@@ -63,7 +63,7 @@ const STORE_OPTION_DESCRIPTION = COMMON_FLAGS.store.description;
 function hiddenStorePathOption(): Option {
   return new Option(
     '--store-path <path>',
-    'Not supported; register the path with "openspec store register <path>" and use --store <id>'
+    'Not supported; register the path with "specorbit store register <path>" and use --store <id>'
   ).hideHelp();
 }
 
@@ -107,14 +107,14 @@ export function getCommandPath(command: Command): string {
 
   while (current) {
     const name = current.name();
-    // Skip the root 'openspec' command
-    if (name && name !== 'openspec') {
+    // Skip the root 'specorbit' command
+    if (name && name !== 'specorbit') {
       names.unshift(name);
     }
     current = current.parent;
   }
 
-  return names.join(':') || 'openspec';
+  return names.join(':') || 'specorbit';
 }
 
 /**
@@ -122,11 +122,11 @@ export function getCommandPath(command: Command): string {
  * first-run telemetry notice so stdout stays a single valid JSON document.
  *
  * `--json` reaches commands three ways, so a single parsed option is not enough:
- * - declared on the leaf (`openspec status --json`) → `opts().json`
- * - declared on a parent group and read via globals (`openspec workset --json list`)
+ * - declared on the leaf (`specorbit status --json`) → `opts().json`
+ * - declared on a parent group and read via globals (`specorbit workset --json list`)
  *   → `optsWithGlobals().json`
  * - a residual arg on a permissive group that never declares the option
- *   (`openspec store --json`, which detects it from `command.args`) → `args`
+ *   (`specorbit store --json`, which detects it from `command.args`) → `args`
  *
  * Suppressing is always safe: the disclosure is only deferred to the next
  * non-JSON run, never lost, whereas printing it on a JSON run corrupts stdout.
@@ -140,7 +140,7 @@ export function isJsonRun(command: Command): boolean {
 
 /**
  * True for the commands that exist to serve shell completions: the user-facing
- * `openspec completion ...` group and the hidden `__complete` resolver that
+ * `specorbit completion ...` group and the hidden `__complete` resolver that
  * generated completion scripts call on every Tab press. Tipping either about
  * completions is noise, and `__complete` would burn the one-shot tip invisibly.
  */
@@ -162,7 +162,7 @@ export function shouldDeferCompletionTip(command: Command, stderrIsTty: boolean)
 }
 
 program
-  .name('openspec')
+  .name('specorbit')
   .description('AI-native system for spec-driven development')
   .version(version);
 
@@ -196,7 +196,7 @@ program.hook('postAction', async (_thisCommand, actionCommand) => {
   // clean). postAction, not preAction: the tip trails the command's own output
   // instead of pushing an error message or `init`'s setup summary down the
   // screen. Deferred — not consumed — whenever nobody would read it: JSON runs,
-  // `openspec completion ...`, and a stderr that is not a terminal (agents and
+  // `specorbit completion ...`, and a stderr that is not a terminal (agents and
   // pipes would otherwise silently burn the user's one-shot tip).
   try {
     await maybeShowCompletionTip({
@@ -219,9 +219,9 @@ const toolsOptionDescription = `Configure AI tools non-interactively. Use "all",
 
 program
   .command('init [path]')
-  .description('Initialize OpenSpec in your project')
+  .description('Initialize SpecOrbit in your project')
   .option('--tools <tools>', toolsOptionDescription)
-  .option('--language <language>', 'Write new OpenSpec artifacts in this language')
+  .option('--language <language>', 'Write new SpecOrbit artifacts in this language')
   .option('--force', 'Auto-cleanup legacy files without prompting')
   .option('--profile <profile>', 'Override global config profile (core or custom)')
   .option('--no-animation', 'Show a static welcome screen instead of the animated one')
@@ -272,7 +272,7 @@ program
   .option('--no-interactive', 'Disable interactive prompts')
   .action(async (options?: { tool?: string; noInteractive?: boolean }) => {
     try {
-      console.log('Note: "openspec experimental" is deprecated. Use "openspec init" instead.');
+      console.log('Note: "specorbit experimental" is deprecated. Use "specorbit init" instead.');
       const { InitCommand } = await import('../core/init.js');
       const initCommand = new InitCommand({
         tools: options?.tool,
@@ -287,7 +287,7 @@ program
 
 program
   .command('update [path]')
-  .description('Update OpenSpec instruction files')
+  .description('Update SpecOrbit instruction files')
   .option('--force', 'Force update even when tools are up to date')
   .action(async (targetPath = '.', options?: { force?: boolean }) => {
     try {
@@ -366,7 +366,7 @@ program
         failurePayload: options?.specs ? { specs: [], root: null } : { changes: [], root: null },
         // Preserve the cwd fallback for pre-config.yaml projects. The resolver
         // still lets a registered/default store take precedence over it.
-        allowImplicitRoot: existsSync(path.join(process.cwd(), 'openspec', 'project.md')),
+        allowImplicitRoot: existsSync(path.join(process.cwd(), 'specorbit', 'project.md')),
       });
       if (!root) {
         return;
@@ -397,8 +397,8 @@ program
   .action(async (options?: { store?: string; storePath?: string }) => {
     try {
       // Implicit cwd fallback stays enabled so `view` keeps accepting the same
-      // directories as `list`/`status` — notably pre-config.yaml `openspec/`
-      // dirs. ViewCommand still reports a missing openspec/ directory itself.
+      // directories as `list`/`status` — notably pre-config.yaml `specorbit/`
+      // dirs. ViewCommand still reports a missing specorbit/ directory itself.
       const root = await resolveRootForCommand(options ?? {});
       if (!root) {
         return;
@@ -414,11 +414,11 @@ program
 // Change command with subcommands
 const changeCmd = program
   .command('change')
-  .description('Manage OpenSpec change proposals');
+  .description('Manage SpecOrbit change proposals');
 
 // Deprecation notice for noun-based commands
 changeCmd.hook('preAction', () => {
-  console.error('Warning: The "openspec change ..." commands are deprecated. Prefer verb-first commands (e.g., "openspec list", "openspec validate --changes").');
+  console.error('Warning: The "specorbit change ..." commands are deprecated. Prefer verb-first commands (e.g., "specorbit list", "specorbit validate --changes").');
 });
 
 changeCmd
@@ -441,12 +441,12 @@ changeCmd
 
 changeCmd
   .command('list')
-  .description('List all active changes (DEPRECATED: use "openspec list" instead)')
+  .description('List all active changes (DEPRECATED: use "specorbit list" instead)')
   .option('--json', 'Output as JSON')
   .option('--long', 'Show id and title with counts')
   .action(async (options?: { json?: boolean; long?: boolean }) => {
     try {
-      console.error('Warning: "openspec change list" is deprecated. Use "openspec list".');
+      console.error('Warning: "specorbit change list" is deprecated. Use "specorbit list".');
       const changeCommand = new ChangeCommand();
       await changeCommand.list(options);
     } catch (error) {
@@ -515,7 +515,7 @@ program
   .option('--type <type>', 'Specify item type when ambiguous: change|spec')
   .option('--strict', 'Enable strict validation mode')
   .option('--json', 'Output validation results as JSON')
-  .option('--concurrency <n>', 'Max concurrent validations (defaults to env OPENSPEC_CONCURRENCY or 6)')
+  .option('--concurrency <n>', 'Max concurrent validations (defaults to env SPECORBIT_CONCURRENCY or 6)')
   .option('--no-interactive', 'Disable interactive prompts')
   .option('--store <id>', STORE_OPTION_DESCRIPTION)
   .addOption(hiddenStorePathOption())
@@ -563,7 +563,7 @@ program
 // Feedback command
 program
   .command('feedback <message>')
-  .description('Submit feedback about OpenSpec')
+  .description('Submit feedback about SpecOrbit')
   .option('--body <text>', 'Detailed description for the feedback')
   .action(async (message: string, options?: { body?: string }) => {
     try {
@@ -578,7 +578,7 @@ program
 // Completion command with subcommands
 const completionCmd = program
   .command('completion')
-  .description('Manage shell completions for OpenSpec CLI');
+  .description('Manage shell completions for SpecOrbit CLI');
 
 completionCmd
   .command('generate [shell]')

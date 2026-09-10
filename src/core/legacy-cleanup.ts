@@ -1,5 +1,5 @@
 /**
- * Legacy cleanup module for detecting and removing OpenSpec artifacts
+ * Legacy cleanup module for detecting and removing SpecOrbit artifacts
  * from previous init versions during the migration to the skill-based workflow.
  */
 
@@ -8,12 +8,12 @@ import os from 'os';
 import { promises as fs } from 'fs';
 import chalk from 'chalk';
 import { FileSystemUtils, removeMarkerBlock as removeMarkerBlockUtil } from '../utils/file-system.js';
-import { OPENSPEC_MARKERS } from './config.js';
+import { SPECORBIT_MARKERS } from './config.js';
 import type { WorkflowId } from './profiles.js';
 
 /**
  * Legacy config file names from the old ToolRegistry.
- * These were config files created at project root with OpenSpec markers.
+ * These were config files created at project root with SpecOrbit markers.
  */
 export const LEGACY_CONFIG_FILES = [
   'CLAUDE.md',
@@ -22,7 +22,7 @@ export const LEGACY_CONFIG_FILES = [
   'COSTRICT.md',
   'QODER.md',
   'IFLOW.md',
-  'AGENTS.md', // root AGENTS.md (not openspec/AGENTS.md)
+  'AGENTS.md', // root AGENTS.md (not specorbit/AGENTS.md)
   'QWEN.md',
 ] as const;
 
@@ -32,63 +32,63 @@ export const LEGACY_CONFIG_FILES = [
  * Some tools used a directory structure, others used individual files.
  */
 export const LEGACY_SLASH_COMMAND_PATHS: Record<string, LegacySlashCommandPattern> = {
-  // Directory-based: .tooldir/commands/openspec/ or .tooldir/commands/openspec/*.md
-  'claude': { type: 'directory', path: '.claude/commands/openspec' },
-  'codebuddy': { type: 'directory', path: '.codebuddy/commands/openspec' },
-  'qoder': { type: 'directory', path: '.qoder/commands/openspec' },
-  'lingma': { type: 'directory', path: '.lingma/commands/openspec' },
-  'crush': { type: 'directory', path: '.crush/commands/openspec' },
-  'gemini': { type: 'directory', path: '.gemini/commands/openspec' },
+  // Directory-based: .tooldir/commands/specorbit/ or .tooldir/commands/specorbit/*.md
+  'claude': { type: 'directory', path: '.claude/commands/specorbit' },
+  'codebuddy': { type: 'directory', path: '.codebuddy/commands/specorbit' },
+  'qoder': { type: 'directory', path: '.qoder/commands/specorbit' },
+  'lingma': { type: 'directory', path: '.lingma/commands/specorbit' },
+  'crush': { type: 'directory', path: '.crush/commands/specorbit' },
+  'gemini': { type: 'directory', path: '.gemini/commands/specorbit' },
 
-  // File-based: individual openspec-*.md files in a commands/workflows/prompts folder
-  'cursor': { type: 'files', pattern: '.cursor/commands/openspec-*.md' },
-  // Keyed by the tool id these map back to, so the pre-opsx Windsurf files
+  // File-based: individual specorbit-*.md files in a commands/workflows/prompts folder
+  'cursor': { type: 'files', pattern: '.cursor/commands/specorbit-*.md' },
+  // Keyed by the tool id these map back to, so the pre-orbit Windsurf files
   // belong to `devin` — the id Windsurf became. Only `.windsurf/` is listed:
-  // `.devin/` postdates the opsx rename and never held `openspec-*` files.
-  'devin': { type: 'files', pattern: '.windsurf/workflows/openspec-*.md' },
-  'kilocode': { type: 'files', pattern: '.kilocode/workflows/openspec-*.md' },
-  'kiro': { type: 'files', pattern: '.kiro/prompts/openspec-*.prompt.md' },
-  'github-copilot': { type: 'files', pattern: '.github/prompts/openspec-*.prompt.md' },
-  'amazon-q': { type: 'files', pattern: '.amazonq/prompts/openspec-*.md' },
-  'cline': { type: 'files', pattern: '.clinerules/workflows/openspec-*.md' },
-  'roocode': { type: 'files', pattern: '.roo/commands/openspec-*.md' },
-  'auggie': { type: 'files', pattern: '.augment/commands/openspec-*.md' },
-  'factory': { type: 'files', pattern: '.factory/commands/openspec-*.md' },
-  'opencode': { type: 'files', pattern: ['.opencode/command/opsx-*.md', '.opencode/command/openspec-*.md'] },
-  'continue': { type: 'files', pattern: '.continue/prompts/openspec-*.prompt' },
-  // Scoped to the pre-opsx filenames under Antigravity's former `.agent` root.
-  // The current `.agents/workflows/opsx-*.md` files postdate that rename, and
+  // `.devin/` postdates the orbit rename and never held `specorbit-*` files.
+  'devin': { type: 'files', pattern: '.windsurf/workflows/specorbit-*.md' },
+  'kilocode': { type: 'files', pattern: '.kilocode/workflows/specorbit-*.md' },
+  'kiro': { type: 'files', pattern: '.kiro/prompts/specorbit-*.prompt.md' },
+  'github-copilot': { type: 'files', pattern: '.github/prompts/specorbit-*.prompt.md' },
+  'amazon-q': { type: 'files', pattern: '.amazonq/prompts/specorbit-*.md' },
+  'cline': { type: 'files', pattern: '.clinerules/workflows/specorbit-*.md' },
+  'roocode': { type: 'files', pattern: '.roo/commands/specorbit-*.md' },
+  'auggie': { type: 'files', pattern: '.augment/commands/specorbit-*.md' },
+  'factory': { type: 'files', pattern: '.factory/commands/specorbit-*.md' },
+  'opencode': { type: 'files', pattern: ['.opencode/command/orbit-*.md', '.opencode/command/specorbit-*.md'] },
+  'continue': { type: 'files', pattern: '.continue/prompts/specorbit-*.prompt' },
+  // Scoped to the pre-orbit filenames under Antigravity's former `.agent` root.
+  // The current `.agents/workflows/orbit-*.md` files postdate that rename, and
   // the `.agent` copies of them are relocated by LEGACY_TOOL_ROOTS, which
   // preserves a customized file instead of deleting it. These patterns are
   // matched in every project, so a shared root like `.agents` is not listed:
-  // OpenSpec never wrote `openspec-*` files there, and a user might have.
-  'antigravity': { type: 'files', pattern: '.agent/workflows/openspec-*.md' },
-  'iflow': { type: 'files', pattern: '.iflow/commands/openspec-*.md' },
-  'qwen': { type: 'files', pattern: ['.qwen/commands/opsx-*.toml', '.qwen/commands/openspec-*.toml'] },
-  'codex': { type: 'files', pattern: '.codex/prompts/openspec-*.md' },
-  // Keep this file-scoped: the CoStrict adapter writes `opsx-*.md` into the
+  // SpecOrbit never wrote `specorbit-*` files there, and a user might have.
+  'antigravity': { type: 'files', pattern: '.agent/workflows/specorbit-*.md' },
+  'iflow': { type: 'files', pattern: '.iflow/commands/specorbit-*.md' },
+  'qwen': { type: 'files', pattern: ['.qwen/commands/orbit-*.toml', '.qwen/commands/specorbit-*.toml'] },
+  'codex': { type: 'files', pattern: '.codex/prompts/specorbit-*.md' },
+  // Keep this file-scoped: the CoStrict adapter writes `orbit-*.md` into the
   // same folder, so a directory entry removes the live command files — and
   // anything else the user keeps there — on every run.
-  'costrict': { type: 'files', pattern: '.cospec/openspec/commands/openspec-*.md' },
+  'costrict': { type: 'files', pattern: '.cospec/specorbit/commands/specorbit-*.md' },
 };
 
 /**
- * Final OpenSpec-managed global Codex prompt filenames mapped to the workflows
+ * Final SpecOrbit-managed global Codex prompt filenames mapped to the workflows
  * they represented before Codex moved to skills-only delivery.
  */
 const LEGACY_GLOBAL_CODEX_WORKFLOWS: Record<string, readonly WorkflowId[]> = {
-  'opsx-propose.md': ['propose'],
-  'opsx-explore.md': ['explore'],
-  'opsx-new.md': ['new'],
-  'opsx-continue.md': ['continue'],
-  'opsx-apply.md': ['apply'],
-  'opsx-update.md': ['update'],
-  'opsx-ff.md': ['ff'],
-  'opsx-sync.md': ['sync'],
-  'opsx-archive.md': ['archive'],
-  'opsx-bulk-archive.md': ['bulk-archive'],
-  'opsx-verify.md': ['verify'],
-  'opsx-onboard.md': ['onboard'],
+  'orbit-propose.md': ['propose'],
+  'orbit-explore.md': ['explore'],
+  'orbit-new.md': ['new'],
+  'orbit-continue.md': ['continue'],
+  'orbit-apply.md': ['apply'],
+  'orbit-update.md': ['update'],
+  'orbit-ff.md': ['ff'],
+  'orbit-sync.md': ['sync'],
+  'orbit-archive.md': ['archive'],
+  'orbit-bulk-archive.md': ['bulk-archive'],
+  'orbit-verify.md': ['verify'],
+  'orbit-onboard.md': ['onboard'],
 };
 
 /**
@@ -114,7 +114,7 @@ export interface LegacySlashCommandPattern {
 }
 
 /**
- * Describes a managed global prompt home and the exact filenames OpenSpec is
+ * Describes a managed global prompt home and the exact filenames SpecOrbit is
  * allowed to treat as legacy artifacts there.
  */
 export interface LegacyGlobalPromptPattern {
@@ -157,7 +157,7 @@ function normalizePathForMatch(filePath: string): string {
 }
 
 /**
- * Classifies a global Codex prompt path as OpenSpec-managed only when it matches
+ * Classifies a global Codex prompt path as SpecOrbit-managed only when it matches
  * the explicit legacy allowlist for the resolved prompt home.
  */
 function getManagedGlobalLegacyPromptMetadata(filePath: string): LegacyGlobalPromptMatch | undefined {
@@ -192,7 +192,7 @@ function getManagedGlobalLegacyPromptMetadata(filePath: string): LegacyGlobalPro
  * Result of legacy artifact detection
  */
 export interface LegacyDetectionResult {
-  /** Config files with OpenSpec markers detected */
+  /** Config files with SpecOrbit markers detected */
   configFiles: string[];
   /** Config files to update (remove markers only, never delete) */
   configFilesToUpdate: string[];
@@ -204,18 +204,18 @@ export interface LegacyDetectionResult {
   globalSlashCommandFiles: string[];
   /** Details for managed global command/prompt files */
   globalSlashCommandDetails?: LegacyGlobalPromptMatch[];
-  /** Whether openspec/AGENTS.md exists */
-  hasOpenspecAgents: boolean;
-  /** Whether openspec/project.md exists (preserved, migration hint only) */
+  /** Whether specorbit/AGENTS.md exists */
+  hasSpecorbitAgents: boolean;
+  /** Whether specorbit/project.md exists (preserved, migration hint only) */
   hasProjectMd: boolean;
-  /** Whether root AGENTS.md has OpenSpec markers */
+  /** Whether root AGENTS.md has SpecOrbit markers */
   hasRootAgentsWithMarkers: boolean;
   /** Whether any legacy artifacts were found */
   hasLegacyArtifacts: boolean;
 }
 
 /**
- * Detects all legacy OpenSpec artifacts in a project.
+ * Detects all legacy SpecOrbit artifacts in a project.
  *
  * @param projectPath - The root path of the project
  * @returns Detection result with all found legacy artifacts
@@ -230,7 +230,7 @@ export async function detectLegacyArtifacts(
     slashCommandFiles: [],
     globalSlashCommandFiles: [],
     globalSlashCommandDetails: [],
-    hasOpenspecAgents: false,
+    hasSpecorbitAgents: false,
     hasProjectMd: false,
     hasRootAgentsWithMarkers: false,
     hasLegacyArtifacts: false,
@@ -252,7 +252,7 @@ export async function detectLegacyArtifacts(
 
   // Detect legacy structure files
   const structureResult = await detectLegacyStructureFiles(projectPath);
-  result.hasOpenspecAgents = structureResult.hasOpenspecAgents;
+  result.hasSpecorbitAgents = structureResult.hasSpecorbitAgents;
   result.hasProjectMd = structureResult.hasProjectMd;
   result.hasRootAgentsWithMarkers = structureResult.hasRootAgentsWithMarkers;
 
@@ -262,7 +262,7 @@ export async function detectLegacyArtifacts(
     result.slashCommandDirs.length > 0 ||
     result.slashCommandFiles.length > 0 ||
     result.globalSlashCommandFiles.length > 0 ||
-    result.hasOpenspecAgents ||
+    result.hasSpecorbitAgents ||
     result.hasRootAgentsWithMarkers ||
     result.hasProjectMd;
 
@@ -270,7 +270,7 @@ export async function detectLegacyArtifacts(
 }
 
 /**
- * Detects legacy config files with OpenSpec markers.
+ * Detects legacy config files with SpecOrbit markers.
  * All config files with markers are candidates for update (marker removal only).
  * Config files are NEVER deleted - they belong to the user's project root.
  *
@@ -292,7 +292,7 @@ export async function detectLegacyConfigFiles(
     if (await FileSystemUtils.fileExists(filePath)) {
       const content = await FileSystemUtils.readFile(filePath);
 
-      if (hasOpenSpecMarkers(content)) {
+      if (hasSpecOrbitMarkers(content)) {
         allFiles.push(fileName);
         filesToUpdate.push(fileName); // Always update, never delete config files
       }
@@ -342,7 +342,7 @@ export async function detectLegacySlashCommands(
  */
 /**
  * Scans the resolved global Codex prompt directories and returns only the
- * allowlisted OpenSpec-managed legacy prompt files.
+ * allowlisted SpecOrbit-managed legacy prompt files.
  */
 async function detectLegacyGlobalPromptFiles(): Promise<LegacyGlobalPromptMatch[]> {
   const foundFiles: LegacyGlobalPromptMatch[] = [];
@@ -373,7 +373,7 @@ async function detectLegacyGlobalPromptFiles(): Promise<LegacyGlobalPromptMatch[
  * Finds legacy slash command files matching a glob pattern.
  *
  * @param projectPath - The root path of the project
- * @param pattern - Glob pattern like '.cursor/commands/openspec-*.md'
+ * @param pattern - Glob pattern like '.cursor/commands/specorbit-*.md'
  * @returns Array of matching file paths relative to projectPath
  */
 async function findLegacySlashCommandFiles(
@@ -416,7 +416,7 @@ async function findLegacySlashCommandFiles(
 }
 
 /**
- * Detects legacy OpenSpec structure files (AGENTS.md and project.md).
+ * Detects legacy SpecOrbit structure files (AGENTS.md and project.md).
  *
  * @param projectPath - The root path of the project
  * @returns Object with detection results for structure files
@@ -424,74 +424,74 @@ async function findLegacySlashCommandFiles(
 export async function detectLegacyStructureFiles(
   projectPath: string
 ): Promise<{
-  hasOpenspecAgents: boolean;
+  hasSpecorbitAgents: boolean;
   hasProjectMd: boolean;
   hasRootAgentsWithMarkers: boolean;
 }> {
-  let hasOpenspecAgents = false;
+  let hasSpecorbitAgents = false;
   let hasProjectMd = false;
   let hasRootAgentsWithMarkers = false;
 
-  // Check for openspec/AGENTS.md
-  const openspecAgentsPath = FileSystemUtils.joinPath(projectPath, 'openspec', 'AGENTS.md');
-  hasOpenspecAgents = await FileSystemUtils.fileExists(openspecAgentsPath);
+  // Check for specorbit/AGENTS.md
+  const specorbitAgentsPath = FileSystemUtils.joinPath(projectPath, 'specorbit', 'AGENTS.md');
+  hasSpecorbitAgents = await FileSystemUtils.fileExists(specorbitAgentsPath);
 
-  // Check for openspec/project.md (for migration messaging, not deleted)
-  const projectMdPath = FileSystemUtils.joinPath(projectPath, 'openspec', 'project.md');
+  // Check for specorbit/project.md (for migration messaging, not deleted)
+  const projectMdPath = FileSystemUtils.joinPath(projectPath, 'specorbit', 'project.md');
   hasProjectMd = await FileSystemUtils.fileExists(projectMdPath);
 
-  // Check for root AGENTS.md with OpenSpec markers
+  // Check for root AGENTS.md with SpecOrbit markers
   const rootAgentsPath = FileSystemUtils.joinPath(projectPath, 'AGENTS.md');
   if (await FileSystemUtils.fileExists(rootAgentsPath)) {
     const content = await FileSystemUtils.readFile(rootAgentsPath);
-    hasRootAgentsWithMarkers = hasOpenSpecMarkers(content);
+    hasRootAgentsWithMarkers = hasSpecOrbitMarkers(content);
   }
 
-  return { hasOpenspecAgents, hasProjectMd, hasRootAgentsWithMarkers };
+  return { hasSpecorbitAgents, hasProjectMd, hasRootAgentsWithMarkers };
 }
 
 /**
- * Checks if content contains OpenSpec markers.
+ * Checks if content contains SpecOrbit markers.
  *
  * @param content - File content to check
  * @returns True if both start and end markers are present
  */
-export function hasOpenSpecMarkers(content: string): boolean {
+export function hasSpecOrbitMarkers(content: string): boolean {
   return (
-    content.includes(OPENSPEC_MARKERS.start) && content.includes(OPENSPEC_MARKERS.end)
+    content.includes(SPECORBIT_MARKERS.start) && content.includes(SPECORBIT_MARKERS.end)
   );
 }
 
 /**
- * Checks if file content is 100% OpenSpec content (only markers and whitespace outside).
+ * Checks if file content is 100% SpecOrbit content (only markers and whitespace outside).
  *
  * @param content - File content to check
  * @returns True if content outside markers is only whitespace
  */
-export function isOnlyOpenSpecContent(content: string): boolean {
-  const startIndex = content.indexOf(OPENSPEC_MARKERS.start);
-  const endIndex = content.indexOf(OPENSPEC_MARKERS.end);
+export function isOnlySpecOrbitContent(content: string): boolean {
+  const startIndex = content.indexOf(SPECORBIT_MARKERS.start);
+  const endIndex = content.indexOf(SPECORBIT_MARKERS.end);
 
   if (startIndex === -1 || endIndex === -1 || endIndex <= startIndex) {
     return false;
   }
 
   const before = content.substring(0, startIndex);
-  const after = content.substring(endIndex + OPENSPEC_MARKERS.end.length);
+  const after = content.substring(endIndex + SPECORBIT_MARKERS.end.length);
 
   return before.trim() === '' && after.trim() === '';
 }
 
 /**
- * Removes the OpenSpec marker block from file content.
+ * Removes the SpecOrbit marker block from file content.
  * Only removes markers that are on their own lines (ignores inline mentions).
  * Cleans up double blank lines that may result from removal.
  *
- * @param content - File content with OpenSpec markers
+ * @param content - File content with SpecOrbit markers
  * @returns Content with marker block removed
  */
 export function removeMarkerBlock(content: string): string {
-  return removeMarkerBlockUtil(content, OPENSPEC_MARKERS.start, OPENSPEC_MARKERS.end);
+  return removeMarkerBlockUtil(content, SPECORBIT_MARKERS.start, SPECORBIT_MARKERS.end);
 }
 
 /**
@@ -513,8 +513,8 @@ export interface CleanupResult {
 }
 
 /**
- * Cleans up legacy OpenSpec artifacts from a project.
- * Preserves openspec/project.md (shows migration hint instead of deleting).
+ * Cleans up legacy SpecOrbit artifacts from a project.
+ * Preserves specorbit/project.md (shows migration hint instead of deleting).
  *
  * @param projectPath - The root path of the project
  * @param detection - Detection result from detectLegacyArtifacts
@@ -548,7 +548,7 @@ export async function cleanupLegacyArtifacts(
     }
   }
 
-  // Delete legacy slash command directories (these are 100% OpenSpec-managed)
+  // Delete legacy slash command directories (these are 100% SpecOrbit-managed)
   for (const dirPath of detection.slashCommandDirs) {
     const fullPath = FileSystemUtils.joinPath(projectPath, dirPath);
     try {
@@ -559,7 +559,7 @@ export async function cleanupLegacyArtifacts(
     }
   }
 
-  // Delete legacy slash command files (these are 100% OpenSpec-managed)
+  // Delete legacy slash command files (these are 100% SpecOrbit-managed)
   for (const filePath of detection.slashCommandFiles) {
     const fullPath = FileSystemUtils.joinPath(projectPath, filePath);
     try {
@@ -570,7 +570,7 @@ export async function cleanupLegacyArtifacts(
     }
   }
 
-  // Delete managed global slash command files (these are 100% OpenSpec-managed)
+  // Delete managed global slash command files (these are 100% SpecOrbit-managed)
   const globalPromptMatchesByPath = new Map(
     getLegacyGlobalPromptMatches(detection).map((prompt) => [prompt.path, prompt] as const)
   );
@@ -592,20 +592,20 @@ export async function cleanupLegacyArtifacts(
     }
   }
 
-  // Delete openspec/AGENTS.md (this is inside openspec/, it's OpenSpec-managed)
-  if (detection.hasOpenspecAgents) {
-    const agentsPath = FileSystemUtils.joinPath(projectPath, 'openspec', 'AGENTS.md');
+  // Delete specorbit/AGENTS.md (this is inside specorbit/, it's SpecOrbit-managed)
+  if (detection.hasSpecorbitAgents) {
+    const agentsPath = FileSystemUtils.joinPath(projectPath, 'specorbit', 'AGENTS.md');
     if (await FileSystemUtils.fileExists(agentsPath)) {
       try {
         await fs.unlink(agentsPath);
-        result.deletedFiles.push('openspec/AGENTS.md');
+        result.deletedFiles.push('specorbit/AGENTS.md');
       } catch (error: any) {
-        result.errors.push(`Failed to delete openspec/AGENTS.md: ${error.message}`);
+        result.errors.push(`Failed to delete specorbit/AGENTS.md: ${error.message}`);
       }
     }
   }
 
-  // Handle root AGENTS.md with OpenSpec markers - remove markers only, NEVER delete
+  // Handle root AGENTS.md with SpecOrbit markers - remove markers only, NEVER delete
   // Note: Root AGENTS.md is handled via configFilesToUpdate above (it's in LEGACY_CONFIG_FILES)
   // This hasRootAgentsWithMarkers flag is just for detection, cleanup happens via configFilesToUpdate
 
@@ -634,11 +634,11 @@ export function formatCleanupSummary(result: CleanupResult): string {
     }
 
     for (const dir of result.deletedDirs) {
-      lines.push(`  ✓ Removed ${dir}/ (replaced by OpenSpec skills and commands)`);
+      lines.push(`  ✓ Removed ${dir}/ (replaced by SpecOrbit skills and commands)`);
     }
 
     for (const file of result.modifiedFiles) {
-      lines.push(`  ✓ Removed OpenSpec markers from ${file}`);
+      lines.push(`  ✓ Removed SpecOrbit markers from ${file}`);
     }
   }
 
@@ -664,7 +664,7 @@ export function formatCleanupSummary(result: CleanupResult): string {
 
 /**
  * Build list of files to be removed with explanations.
- * Only includes OpenSpec-managed files (slash commands, openspec/AGENTS.md).
+ * Only includes SpecOrbit-managed files (slash commands, specorbit/AGENTS.md).
  * Config files like CLAUDE.md, AGENTS.md are NEVER deleted.
  *
  * @param detection - Detection result from detectLegacyArtifacts
@@ -673,14 +673,14 @@ export function formatCleanupSummary(result: CleanupResult): string {
 function buildRemovalsList(detection: LegacyDetectionResult): Array<{ path: string; explanation: string }> {
   const removals: Array<{ path: string; explanation: string }> = [];
 
-  // Slash command directories (these are 100% OpenSpec-managed)
+  // Slash command directories (these are 100% SpecOrbit-managed)
   for (const dir of detection.slashCommandDirs) {
     // Split on both forward and backward slashes for Windows compatibility
     const toolDir = dir.split(/[\/\\]/)[0];
     removals.push({ path: dir + '/', explanation: `replaced by ${toolDir}/skills/` });
   }
 
-  // Slash command files (these are 100% OpenSpec-managed)
+  // Slash command files (these are 100% SpecOrbit-managed)
   for (const file of detection.slashCommandFiles) {
     removals.push({ path: file, explanation: 'replaced by skills/' });
   }
@@ -693,9 +693,9 @@ function buildRemovalsList(detection: LegacyDetectionResult): Array<{ path: stri
     removals.push({ path: prompt.path, explanation });
   }
 
-  // openspec/AGENTS.md (inside openspec/, it's OpenSpec-managed)
-  if (detection.hasOpenspecAgents) {
-    removals.push({ path: 'openspec/AGENTS.md', explanation: 'obsolete workflow file' });
+  // specorbit/AGENTS.md (inside specorbit/, it's SpecOrbit-managed)
+  if (detection.hasSpecorbitAgents) {
+    removals.push({ path: 'specorbit/AGENTS.md', explanation: 'obsolete workflow file' });
   }
 
   // Note: Config files (CLAUDE.md, AGENTS.md, etc.) are NEVER in the removals list
@@ -716,7 +716,7 @@ function buildUpdatesList(detection: LegacyDetectionResult): Array<{ path: strin
 
   // All config files with markers get updated (markers removed, file preserved)
   for (const file of detection.configFilesToUpdate) {
-    updates.push({ path: file, explanation: 'removing OpenSpec markers' });
+    updates.push({ path: file, explanation: 'removing SpecOrbit markers' });
   }
 
   return updates;
@@ -741,9 +741,9 @@ export function formatDetectionSummary(detection: LegacyDetectionResult): string
   }
 
   // Header - welcoming upgrade message
-  lines.push(chalk.bold('Upgrading to the new OpenSpec'));
+  lines.push(chalk.bold('Upgrading to the new SpecOrbit'));
   lines.push('');
-  lines.push('OpenSpec now uses agent skills, the emerging standard across coding');
+  lines.push('SpecOrbit now uses agent skills, the emerging standard across coding');
   lines.push('agents. This simplifies your setup while keeping everything working');
   lines.push('as before.');
   lines.push('');
@@ -761,7 +761,7 @@ export function formatDetectionSummary(detection: LegacyDetectionResult): string
   if (updates.length > 0) {
     if (removals.length > 0) lines.push('');
     lines.push(chalk.bold('Files to update'));
-    lines.push(chalk.dim('OpenSpec markers will be removed, your content preserved:'));
+    lines.push(chalk.dim('SpecOrbit markers will be removed, your content preserved:'));
     for (const { path } of updates) {
       lines.push(`  • ${path}`);
     }
@@ -887,7 +887,7 @@ function hasLegacyArtifacts(detection: LegacyDetectionResult): boolean {
     detection.slashCommandDirs.length > 0 ||
     detection.slashCommandFiles.length > 0 ||
     detection.globalSlashCommandFiles.length > 0 ||
-    detection.hasOpenspecAgents ||
+    detection.hasSpecorbitAgents ||
     detection.hasRootAgentsWithMarkers ||
     detection.hasProjectMd
   );
@@ -914,7 +914,7 @@ export function omitGlobalLegacyPromptFiles(detection: LegacyDetectionResult): L
  * Codex upgrade suppressed because the shared `.agents` root is already owned by
  * another tool. Deleting the legacy prompt without writing its replacement would
  * violate the cleanup contract ("remove X because replacement Y now exists") and
- * strip the tool's only OpenSpec integration.
+ * strip the tool's only SpecOrbit integration.
  */
 export function omitToolLegacyArtifacts(
   detection: LegacyDetectionResult,
@@ -954,7 +954,7 @@ export function pickGlobalLegacyPromptFiles(
     slashCommandFiles: [],
     globalSlashCommandFiles: details.map((detail) => detail.path),
     globalSlashCommandDetails: details,
-    hasOpenspecAgents: false,
+    hasSpecorbitAgents: false,
     hasProjectMd: false,
     hasRootAgentsWithMarkers: false,
     hasLegacyArtifacts: details.length > 0,
@@ -970,11 +970,11 @@ export function pickGlobalLegacyPromptFiles(
 export function formatProjectMdMigrationHint(): string {
   const lines: string[] = [];
   lines.push(chalk.yellow.bold('Needs your attention'));
-  lines.push('  • openspec/project.md');
+  lines.push('  • specorbit/project.md');
   lines.push(chalk.dim('    We won\'t delete this file. It may contain useful project context.'));
   lines.push('');
-  lines.push(chalk.dim('    The new openspec/config.yaml has a "context:" section for planning'));
-  lines.push(chalk.dim('    context. This is included in every OpenSpec request and works more'));
+  lines.push(chalk.dim('    The new specorbit/config.yaml has a "context:" section for planning'));
+  lines.push(chalk.dim('    context. This is included in every SpecOrbit request and works more'));
   lines.push(chalk.dim('    reliably than the old project.md approach.'));
   lines.push('');
   lines.push(chalk.dim('    Review project.md, move any useful content to config.yaml\'s context'));

@@ -18,10 +18,10 @@ describe('generateApplyInstructions blocked prerequisites', () => {
   let changeDir: string;
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openspec-apply-blocked-'));
-    changeDir = path.join(tempDir, 'openspec', 'changes', 'my-change');
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'specorbit-apply-blocked-'));
+    changeDir = path.join(tempDir, 'specorbit', 'changes', 'my-change');
     fs.mkdirSync(changeDir, { recursive: true });
-    fs.writeFileSync(path.join(changeDir, '.openspec.yaml'), 'schema: spec-driven\n');
+    fs.writeFileSync(path.join(changeDir, '.specorbit.yaml'), 'schema: spec-driven\n');
     fs.writeFileSync(path.join(changeDir, 'proposal.md'), '## Why\nx\n');
   });
 
@@ -54,7 +54,7 @@ describe('generateApplyInstructions blocked prerequisites', () => {
 
     expect(instructions.instruction).toContain('the schema says which are conditional');
     // Naming the first of several would point at design as often as at specs.
-    expect(instructions.instruction).toContain('openspec instructions <artifact>');
+    expect(instructions.instruction).toContain('specorbit instructions <artifact>');
   });
 
   it('drops the chain line once only the required artifact is left', async () => {
@@ -66,13 +66,13 @@ describe('generateApplyInstructions blocked prerequisites', () => {
     expect(instructions.missingPrerequisites).toEqual(['tasks']);
     expect(instructions.instruction).not.toContain('Not created yet');
     expect(instructions.instruction).toContain(
-      'openspec instructions tasks --change my-change'
+      'specorbit instructions tasks --change my-change'
     );
   });
 
   it('counts a skipped specs artifact as built', async () => {
     fs.writeFileSync(
-      path.join(changeDir, '.openspec.yaml'),
+      path.join(changeDir, '.specorbit.yaml'),
       'schema: spec-driven\nskip_specs: true\n'
     );
 
@@ -86,8 +86,8 @@ describe('generateApplyInstructions blocked prerequisites', () => {
 
     // `continue` is not in CORE_WORKFLOWS, so the default install never had the
     // skill the old message named.
-    expect(instructions.instruction).not.toContain('openspec-continue-change');
-    expect(instructions.instruction).toContain('openspec status --change my-change');
+    expect(instructions.instruction).not.toContain('specorbit-continue-change');
+    expect(instructions.instruction).toContain('specorbit status --change my-change');
   });
 
   it('reports no prerequisites once the change is ready to apply', async () => {
@@ -114,6 +114,6 @@ describe('generateApplyInstructions blocked prerequisites', () => {
 
     expect(output).toContain('Missing artifacts: tasks');
     expect(output).toContain('Not created yet, in build order: specs, design, tasks');
-    expect(output).not.toContain('openspec-continue-change');
+    expect(output).not.toContain('specorbit-continue-change');
   });
 });

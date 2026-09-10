@@ -26,18 +26,18 @@ type WorkflowId = (typeof ALL_WORKFLOWS)[number];
  * Maps workflow IDs to their skill directory names.
  */
 export const WORKFLOW_TO_SKILL_DIR: Record<WorkflowId, string> = {
-  'explore': 'openspec-explore',
-  'new': 'openspec-new-change',
-  'continue': 'openspec-continue-change',
-  'apply': 'openspec-apply-change',
-  'update': 'openspec-update-change',
-  'ff': 'openspec-ff-change',
-  'sync': 'openspec-sync-specs',
-  'archive': 'openspec-archive-change',
-  'bulk-archive': 'openspec-bulk-archive-change',
-  'verify': 'openspec-verify-change',
-  'onboard': 'openspec-onboard',
-  'propose': 'openspec-propose',
+  'explore': 'specorbit-explore',
+  'new': 'specorbit-new-change',
+  'continue': 'specorbit-continue-change',
+  'apply': 'specorbit-apply-change',
+  'update': 'specorbit-update-change',
+  'ff': 'specorbit-ff-change',
+  'sync': 'specorbit-sync-specs',
+  'archive': 'specorbit-archive-change',
+  'bulk-archive': 'specorbit-bulk-archive-change',
+  'verify': 'specorbit-verify-change',
+  'onboard': 'specorbit-onboard',
+  'propose': 'specorbit-propose',
 };
 
 function toKnownWorkflows(workflows: readonly string[]): WorkflowId[] {

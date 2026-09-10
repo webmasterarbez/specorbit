@@ -138,12 +138,12 @@ export function getStatusIndicator(status: 'done' | 'skipped' | 'ready' | 'block
 }
 
 /**
- * Returns the list of available change directory names under openspec/changes/.
+ * Returns the list of available change directory names under specorbit/changes/.
  * Excludes the archive directory and hidden directories.
  */
 export async function getAvailableChanges(
   projectRoot: string,
-  changesDir = path.join(projectRoot, 'openspec', 'changes')
+  changesDir = path.join(projectRoot, 'specorbit', 'changes')
 ): Promise<string[]> {
   const changesPath = changesDir;
   try {
@@ -192,12 +192,12 @@ function validateChangeLookupName(changeName: string): string | undefined {
 export async function validateChangeExists(
   changeName: string | undefined,
   projectRoot: string,
-  changesDir = path.join(projectRoot, 'openspec', 'changes'),
+  changesDir = path.join(projectRoot, 'specorbit', 'changes'),
   hints: { newChangeHint?: string } = {}
 ): Promise<string> {
   // Hints must stay pasteable: callers with a selected store pass a
   // store-carrying hint so following it lands in the same root.
-  const newChangeHint = hints.newChangeHint ?? 'openspec new change <name>';
+  const newChangeHint = hints.newChangeHint ?? 'specorbit new change <name>';
 
   if (!changeName) {
     const available = await getAvailableChanges(projectRoot, changesDir);

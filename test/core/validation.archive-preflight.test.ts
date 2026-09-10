@@ -58,9 +58,9 @@ describe('validate: deltas archive would refuse (#1112)', () => {
   };
 
   beforeEach(async () => {
-    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'openspec-preflight-'));
-    changesDir = path.join(testDir, 'openspec', 'changes');
-    mainSpecsDir = path.join(testDir, 'openspec', 'specs');
+    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'specorbit-preflight-'));
+    changesDir = path.join(testDir, 'specorbit', 'changes');
+    mainSpecsDir = path.join(testDir, 'specorbit', 'specs');
     await fs.mkdir(changesDir, { recursive: true });
     await fs.mkdir(mainSpecsDir, { recursive: true });
   });

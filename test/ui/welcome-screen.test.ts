@@ -28,7 +28,7 @@ vi.mock('@inquirer/core', () => ({
 
 describe('welcome screen', () => {
   const originalNoColor = process.env.NO_COLOR;
-  const originalNoAnimation = process.env.OPENSPEC_NO_ANIMATION;
+  const originalNoAnimation = process.env.SPECORBIT_NO_ANIMATION;
   const originalStdinIsTTY = process.stdin.isTTY;
   const originalStdoutIsTTY = process.stdout.isTTY;
   const originalColumns = process.stdout.columns;
@@ -44,7 +44,7 @@ describe('welcome screen', () => {
 
   beforeEach(() => {
     delete process.env.NO_COLOR;
-    delete process.env.OPENSPEC_NO_ANIMATION;
+    delete process.env.SPECORBIT_NO_ANIMATION;
     Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
     Object.defineProperty(process.stdout, 'isTTY', { value: true, configurable: true });
     Object.defineProperty(process.stdout, 'columns', { value: 100, configurable: true });
@@ -65,9 +65,9 @@ describe('welcome screen', () => {
       process.env.NO_COLOR = originalNoColor;
     }
     if (originalNoAnimation === undefined) {
-      delete process.env.OPENSPEC_NO_ANIMATION;
+      delete process.env.SPECORBIT_NO_ANIMATION;
     } else {
-      process.env.OPENSPEC_NO_ANIMATION = originalNoAnimation;
+      process.env.SPECORBIT_NO_ANIMATION = originalNoAnimation;
     }
     Object.defineProperty(process.stdin, 'isTTY', { value: originalStdinIsTTY, configurable: true });
     Object.defineProperty(process.stdout, 'isTTY', { value: originalStdoutIsTTY, configurable: true });
@@ -91,10 +91,10 @@ describe('welcome screen', () => {
 
     const output = writtenOutput();
 
-    expect(output).toContain('/opsx:propose');
-    expect(output).toContain('/opsx:apply');
-    expect(output).not.toContain('/opsx:new');
-    expect(output).not.toContain('/opsx:continue');
+    expect(output).toContain('/orbit:propose');
+    expect(output).toContain('/orbit:apply');
+    expect(output).not.toContain('/orbit:new');
+    expect(output).not.toContain('/orbit:continue');
   });
 
   it('advertises expanded commands when a custom profile installs them', async () => {
@@ -105,9 +105,9 @@ describe('welcome screen', () => {
 
     const output = writtenOutput();
 
-    expect(output).toContain('/opsx:new');
-    expect(output).toContain('/opsx:continue');
-    expect(output).not.toContain('/opsx:propose');
+    expect(output).toContain('/orbit:new');
+    expect(output).toContain('/orbit:continue');
+    expect(output).not.toContain('/orbit:propose');
   });
 
   it('omits the quick start block when no onboarding workflow is installed', async () => {
@@ -118,24 +118,24 @@ describe('welcome screen', () => {
 
     const output = writtenOutput();
 
-    expect(output).toContain('Welcome to OpenSpec');
+    expect(output).toContain('Welcome to SpecOrbit');
     expect(output).not.toContain('Quick start after setup:');
   });
 
-  it('does not promise opsx commands in the setup summary', async () => {
+  it('does not promise orbit commands in the setup summary', async () => {
     const { showWelcomeScreen } = await import('../../src/ui/welcome-screen.js');
     renderStatically();
 
     // This screen runs before tool selection, and skills-only tools (Codex,
     // Kimi Code, ...) correctly receive no command files, so the summary must
-    // not state that opsx slash commands are part of every setup.
+    // not state that orbit slash commands are part of every setup.
     await showWelcomeScreen(['archive']);
 
     const output = writtenOutput();
 
     expect(output).toContain('Agent Skills for AI tools');
     expect(output).toContain('Workflow commands, if supported');
-    expect(output).not.toContain('opsx slash commands');
+    expect(output).not.toContain('orbit slash commands');
   });
 
   it('flags that the quick-start spelling varies by tool', async () => {
@@ -143,13 +143,13 @@ describe('welcome screen', () => {
     renderStatically();
 
     // The quick start shows canonical names, but this screen renders one
-    // prompt before tools are picked — an Amazon Q user types @opsx-propose
-    // and a Codex user $openspec-propose, neither of which is shown here.
+    // prompt before tools are picked — an Amazon Q user types @orbit-propose
+    // and a Codex user $specorbit-propose, neither of which is shown here.
     await showWelcomeScreen(['propose']);
 
     const output = writtenOutput();
 
-    expect(output).toContain('/opsx:propose');
+    expect(output).toContain('/orbit:propose');
     expect(output).toContain('spelling varies by tool');
   });
 
@@ -178,9 +178,9 @@ describe('welcome screen', () => {
     }
   });
 
-  it('renders statically when OPENSPEC_NO_ANIMATION is set', async () => {
+  it('renders statically when SPECORBIT_NO_ANIMATION is set', async () => {
     const { showWelcomeScreen } = await import('../../src/ui/welcome-screen.js');
-    process.env.OPENSPEC_NO_ANIMATION = '1';
+    process.env.SPECORBIT_NO_ANIMATION = '1';
 
     await showWelcomeScreen(CORE_WORKFLOWS);
 
@@ -188,15 +188,15 @@ describe('welcome screen', () => {
     // otherwise the keystroke falls through into the tool picker (#1462).
     expect(useKeypressMock).toHaveBeenCalledOnce();
     const output = writtenOutput();
-    expect(output).toContain('Welcome to OpenSpec');
+    expect(output).toContain('Welcome to SpecOrbit');
     expect(output).toContain('Press Enter');
     // No cursor-up repaints: the frame is drawn exactly once.
     expect(output).not.toMatch(/\x1b\[\d+A/);
   });
 
-  it('honors OPENSPEC_NO_ANIMATION even when set to an empty value', async () => {
+  it('honors SPECORBIT_NO_ANIMATION even when set to an empty value', async () => {
     const { showWelcomeScreen } = await import('../../src/ui/welcome-screen.js');
-    process.env.OPENSPEC_NO_ANIMATION = '';
+    process.env.SPECORBIT_NO_ANIMATION = '';
 
     await showWelcomeScreen(CORE_WORKFLOWS);
 
@@ -211,7 +211,7 @@ describe('welcome screen', () => {
 
     expect(useKeypressMock).toHaveBeenCalledOnce();
     const output = writtenOutput();
-    expect(output).toContain('Welcome to OpenSpec');
+    expect(output).toContain('Welcome to SpecOrbit');
     expect(output).not.toMatch(/\x1b\[\d+A/);
   });
 
@@ -226,7 +226,7 @@ describe('welcome screen', () => {
       await showWelcomeScreen(CORE_WORKFLOWS);
 
       expect(useKeypressMock).toHaveBeenCalledOnce();
-      expect(writtenOutput()).toContain('Welcome to OpenSpec');
+      expect(writtenOutput()).toContain('Welcome to SpecOrbit');
     }
   );
 });

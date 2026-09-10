@@ -1,7 +1,7 @@
 /**
  * Update Command
  *
- * Refreshes OpenSpec skills and commands for configured tools.
+ * Refreshes SpecOrbit skills and commands for configured tools.
  * Supports profile-aware updates, delivery changes, migration, and smart update detection.
  */
 
@@ -12,7 +12,7 @@ import * as fs from 'fs';
 import { createRequire } from 'module';
 import { FileSystemUtils } from '../utils/file-system.js';
 import { getSkillReferenceTransformer, getTransformerForTool, transformToSkillReferences } from '../utils/command-references.js';
-import { AI_TOOLS, OPENSPEC_DIR_NAME } from './config.js';
+import { AI_TOOLS, SPECORBIT_DIR_NAME } from './config.js';
 import {
   generateCommands,
   CommandAdapterRegistry,
@@ -79,7 +79,7 @@ import {
 import { includesGitHubCopilot, writeCopilotCloudFiles, removeCopilotCloudFiles, isCopilotCloudEnabled, readCopilotCloudOptIn, findUnmanagedCloudFiles } from './github-copilot/cloud-agent.js';
 
 const require = createRequire(import.meta.url);
-const { version: OPENSPEC_VERSION } = require('../../package.json');
+const { version: SPECORBIT_VERSION } = require('../../package.json');
 
 /**
  * Captures legacy migration side effects so update can refresh newly configured
@@ -126,21 +126,21 @@ export class UpdateCommand {
   }
 
   /**
-   * Refreshes OpenSpec skills and commands for all configured tools,
+   * Refreshes SpecOrbit skills and commands for all configured tools,
    * regenerating artifacts according to the effective profile and delivery mode.
    *
-   * @param projectPath - Path to the project root containing the openspec directory
+   * @param projectPath - Path to the project root containing the specorbit directory
    */
   async execute(projectPath: string): Promise<void> {
     const resolvedProjectPath = path.resolve(projectPath);
-    const openspecPath = path.join(resolvedProjectPath, OPENSPEC_DIR_NAME);
+    const specorbitPath = path.join(resolvedProjectPath, SPECORBIT_DIR_NAME);
 
-    // 1. Check openspec directory exists
-    if (!await FileSystemUtils.directoryExists(openspecPath)) {
-      throw new Error(`No OpenSpec directory found. Run 'openspec init' first.`);
+    // 1. Check specorbit directory exists
+    if (!await FileSystemUtils.directoryExists(specorbitPath)) {
+      throw new Error(`No SpecOrbit directory found. Run 'specorbit init' first.`);
     }
 
-    // 2. Migrate OpenSpec-managed skills left in renamed tool directories
+    // 2. Migrate SpecOrbit-managed skills left in renamed tool directories
     // (e.g. .kimi -> .kimi-code) so they stay detected and get refreshed,
     // then perform the one-time profile migration if needed before any
     // legacy upgrade generation.
@@ -152,7 +152,7 @@ export class UpdateCommand {
     }
     const declinedMigrations = await this.offerConsentedLegacyMigrations(resolvedProjectPath);
 
-    // Use detected tool directories to preserve existing opsx skills/commands.
+    // Use detected tool directories to preserve existing orbit skills/commands.
     const detectedTools = getAvailableTools(resolvedProjectPath);
     migrateIfNeededShared(resolvedProjectPath, detectedTools);
 
@@ -191,19 +191,19 @@ export class UpdateCommand {
         for (const migration of declinedMigrations) {
           console.log(
             chalk.yellow(
-              `Nothing to update: this project's OpenSpec files are still in ${migration.from}/, ` +
-                `which OpenSpec no longer writes.`
+              `Nothing to update: this project's SpecOrbit files are still in ${migration.from}/, ` +
+                `which SpecOrbit no longer writes.`
             )
           );
           console.log(
-            chalk.dim(`Re-run "openspec update" and accept the move to ${migration.to}/ to resume updates.`)
+            chalk.dim(`Re-run "specorbit update" and accept the move to ${migration.to}/ to resume updates.`)
           );
         }
         return;
       }
       await this.syncCopilotCloudFiles(resolvedProjectPath, configuredAndNewTools);
       console.log(chalk.yellow('No configured tools found.'));
-      console.log(chalk.dim('Run "openspec init" to set up tools.'));
+      console.log(chalk.dim('Run "specorbit init" to set up tools.'));
       return;
     }
 
@@ -211,7 +211,7 @@ export class UpdateCommand {
     //    the generation loop below writes — otherwise a legacy-upgraded tool would be
     //    fingerprinted against commands it was never given.
     const toolStatuses = configuredTools.map((toolId) =>
-      getToolVersionStatus(resolvedProjectPath, toolId, OPENSPEC_VERSION, {
+      getToolVersionStatus(resolvedProjectPath, toolId, SPECORBIT_VERSION, {
         workflows: legacyWorkflowOverrides[toolId] ?? desiredWorkflows,
       })
     );
@@ -313,7 +313,7 @@ export class UpdateCommand {
               resolveCommandSurfaceCapability(tool.value),
               resolveCommandInvocation(tool.value)
             );
-            const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
+            const skillContent = generateSkillContent(template, SPECORBIT_VERSION, transformer);
             FileSystemUtils.assertPathWithin(skillsRoot, skillFile);
             await FileSystemUtils.writeFile(skillFile, skillContent);
           }
@@ -336,7 +336,7 @@ export class UpdateCommand {
           // Persist the selected owner even when commands-only delivery leaves
           // this target with no generated skills.
           writeSharedSkillTarget(resolvedProjectPath, tool.value);
-          // A tool with no command adapter now has zero OpenSpec artifacts;
+          // A tool with no command adapter now has zero SpecOrbit artifacts;
           // say so like init does, rather than deleting its skills silently
           // and letting tool detection re-suggest an init that would also
           // generate nothing under this delivery setting.
@@ -403,7 +403,7 @@ export class UpdateCommand {
     // 11. Summary
     console.log();
     if (updatedTools.length > 0) {
-      console.log(chalk.green(`✓ Updated: ${updatedTools.join(', ')} (v${OPENSPEC_VERSION})`));
+      console.log(chalk.green(`✓ Updated: ${updatedTools.join(', ')} (v${SPECORBIT_VERSION})`));
     }
     if (failedTools.length > 0) {
       console.log(chalk.red(`✗ Failed: ${failedTools.map(f => `${f.name} (${f.error})`).join(', ')}`));
@@ -423,7 +423,7 @@ export class UpdateCommand {
         chalk.yellow(
           `No skills or commands remain for ${names}: delivery is set to 'commands' but ` +
             `${zeroArtifactTools.length === 1 ? 'it supports' : 'they support'} only skills. ` +
-            `Run 'openspec config set delivery both' to generate skills.`
+            `Run 'specorbit config set delivery both' to generate skills.`
         )
       );
     }
@@ -445,7 +445,7 @@ export class UpdateCommand {
           newlyConfiguredTools.map((toolId) => {
             if (shouldGenerateCommandsForTool(toolId, delivery)) {
               // Name the command the tool's files actually answer to:
-              // /opsx-<id> where the filename is the command name.
+              // /orbit-<id> where the filename is the command name.
               const transformer = getTransformerForTool(
                 toolId,
                 delivery,
@@ -480,7 +480,7 @@ export class UpdateCommand {
         }
         console.log();
       }
-      console.log(`Learn more: ${chalk.cyan('https://github.com/Fission-AI/OpenSpec')}`);
+      console.log(`Learn more: ${chalk.cyan('https://github.com/specorbit/specorbit')}`);
     }
 
     await this.syncCopilotCloudFiles(resolvedProjectPath, configuredAndNewTools);
@@ -505,7 +505,7 @@ export class UpdateCommand {
       console.log(chalk.dim(restartHint));
     }
     if (failedTools.length > 0) {
-      throw new Error(`OpenSpec update failed for: ${failedTools.map((tool) => tool.name).join(', ')}`);
+      throw new Error(`SpecOrbit update failed for: ${failedTools.map((tool) => tool.name).join(', ')}`);
     }
   }
 
@@ -514,7 +514,7 @@ export class UpdateCommand {
       if (includesGitHubCopilot(configuredTools)) {
         // Cloud files are opt-in (see cloud-agent.ts). `update` never prompts,
         // so it only refreshes files the user has already opted into (via
-        // `openspec init` or a `githubCopilot.cloudAgent: true` config), or that
+        // `specorbit init` or a `githubCopilot.cloudAgent: true` config), or that
         // a pre-opt-in project already has. Opting in is a deliberate init/config
         // step, never a silent side effect of running update.
         if (await isCopilotCloudEnabled(projectPath)) {
@@ -523,8 +523,8 @@ export class UpdateCommand {
           if (collisions.length > 0) {
             console.log(
               chalk.dim(
-                `Left your existing ${collisions.join(' and ')} untouched — add the OpenSpec ` +
-                  `install step by hand so the Copilot cloud agent can run openspec.`
+                `Left your existing ${collisions.join(' and ')} untouched — add the SpecOrbit ` +
+                  `install step by hand so the Copilot cloud agent can run specorbit.`
               )
             );
           }
@@ -545,7 +545,7 @@ export class UpdateCommand {
         } else if (isInteractive()) {
           console.log(
             chalk.dim(
-              "GitHub Copilot cloud coding-agent files are available (opt-in). Enable with 'openspec init --copilot-cloud'."
+              "GitHub Copilot cloud coding-agent files are available (opt-in). Enable with 'specorbit init --copilot-cloud'."
             )
           );
         }
@@ -567,7 +567,7 @@ export class UpdateCommand {
    */
   private displayUpToDateMessage(toolStatuses: ToolVersionStatus[]): void {
     const toolNames = toolStatuses.map((s) => s.toolId);
-    console.log(chalk.green(`✓ All ${toolStatuses.length} tool(s) up to date (v${OPENSPEC_VERSION})`));
+    console.log(chalk.green(`✓ All ${toolStatuses.length} tool(s) up to date (v${SPECORBIT_VERSION})`));
     console.log(chalk.dim(`  Tools: ${toolNames.join(', ')}`));
     console.log();
     console.log(chalk.dim('Use --force to refresh files anyway.'));
@@ -585,7 +585,7 @@ export class UpdateCommand {
       const status = statusByTool.get(toolId);
       if (status?.needsUpdate) {
         const fromVersion = status.generatedByVersion ?? 'unknown';
-        return `${status.toolId} (${fromVersion} → ${OPENSPEC_VERSION})`;
+        return `${status.toolId} (${fromVersion} → ${SPECORBIT_VERSION})`;
       }
       return `${toolId} (config sync)`;
     });
@@ -628,7 +628,7 @@ export class UpdateCommand {
       console.log();
       console.log(
         chalk.yellow(
-          `Detected new ${toolNoun}: ${newToolNames.join(', ')}. Run 'openspec init' to add ${pronoun}.`
+          `Detected new ${toolNoun}: ${newToolNames.join(', ')}. Run 'specorbit init' to add ${pronoun}.`
         )
       );
     }
@@ -636,7 +636,7 @@ export class UpdateCommand {
 
   /**
    * Prints the profile notes, in order, with one pointer at
-   * `openspec config profile` rather than three.
+   * `specorbit config profile` rather than three.
    *
    * Every note is evaluated: reading them as one short-circuited `||` chain
    * would swallow whichever ran second.
@@ -675,7 +675,7 @@ export class UpdateCommand {
     const extraWorkflows = installedWorkflows.filter((w) => !profileSet.has(w));
 
     if (extraWorkflows.length > 0) {
-      console.log(chalk.dim(`Note: ${extraWorkflows.length} extra workflows not in profile (use \`openspec config profile\` to manage)`));
+      console.log(chalk.dim(`Note: ${extraWorkflows.length} extra workflows not in profile (use \`specorbit config profile\` to manage)`));
       return true;
     }
     return false;
@@ -701,14 +701,14 @@ export class UpdateCommand {
     const label = missing.length === 1 ? 'workflow' : 'workflows';
     const pronoun = missing.length === 1 ? 'it' : 'them';
     console.log(chalk.dim(`Note: Your custom profile is missing ${missing.length} core ${label}: ${missing.join(', ')}`));
-    console.log(chalk.dim(`Run \`openspec config profile\` to add ${pronoun}, or \`openspec config profile core\` to use the core set.`));
+    console.log(chalk.dim(`Run \`specorbit config profile\` to add ${pronoun}, or \`specorbit config profile core\` to use the core set.`));
     return true;
   }
 
   /**
    * Fallback pointer to the workflows the profile leaves out.
    *
-   * `update` already points at `openspec config profile` when files drift from
+   * `update` already points at `specorbit config profile` when files drift from
    * the profile, and when a custom profile is missing core workflows. Neither
    * fires for the default `core` profile, so the user `update` is most likely
    * to be helping — the one who ran it because a command they read about never
@@ -867,7 +867,7 @@ export class UpdateCommand {
   }
 
   /**
-   * Offers to move OpenSpec content out of a renamed tool's former directory
+   * Offers to move SpecOrbit content out of a renamed tool's former directory
    * when the old location might still be the live one — today, Windsurf's
    * `.windsurf/` after the Devin Desktop rebrand.
    *
@@ -914,12 +914,12 @@ export class UpdateCommand {
           shouldMigrate = false;
         }
         if (!shouldMigrate) {
-          // Say what declining costs. OpenSpec writes the current root now, so
-          // the files keep working where they are, but OpenSpec stops managing
+          // Say what declining costs. SpecOrbit writes the current root now, so
+          // the files keep working where they are, but SpecOrbit stops managing
           // them — it no longer looks in the former directory.
           console.log(
             chalk.dim(
-              `Left in place. OpenSpec writes ${migration.to}/ now and will not manage ` +
+              `Left in place. SpecOrbit writes ${migration.to}/ now and will not manage ` +
                 `${migration.from}/, so those files stay as they are until you move them. ` +
                 `You will be asked again next run.`
             )
@@ -943,7 +943,7 @@ export class UpdateCommand {
   }
 
   /**
-   * Detect and handle legacy OpenSpec artifacts.
+   * Detect and handle legacy SpecOrbit artifacts.
    * Unlike init, update warns but continues if legacy files found in non-interactive mode.
    * Returns array of tool IDs that were newly configured during legacy upgrade.
    */
@@ -1264,7 +1264,7 @@ export class UpdateCommand {
               resolveCommandSurfaceCapability(tool.value),
               resolveCommandInvocation(tool.value)
             );
-            const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
+            const skillContent = generateSkillContent(template, SPECORBIT_VERSION, transformer);
             FileSystemUtils.assertPathWithin(skillsRoot, skillFile);
             await FileSystemUtils.writeFile(skillFile, skillContent);
           }

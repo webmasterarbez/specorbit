@@ -10,21 +10,21 @@ describe('getOnboardingCommands', () => {
   it('omits commands the profile does not install', () => {
     const commands = getOnboardingCommands(CORE_WORKFLOWS).map((c) => c.command);
 
-    expect(commands).toEqual(['/opsx:propose', '/opsx:apply']);
-    expect(commands).not.toContain('/opsx:new');
-    expect(commands).not.toContain('/opsx:continue');
+    expect(commands).toEqual(['/orbit:propose', '/orbit:apply']);
+    expect(commands).not.toContain('/orbit:new');
+    expect(commands).not.toContain('/orbit:continue');
   });
 
   it('includes expanded commands when a custom profile installs them', () => {
     const commands = getOnboardingCommands(['new', 'continue', 'apply']).map((c) => c.command);
 
-    expect(commands).toEqual(['/opsx:new', '/opsx:continue', '/opsx:apply']);
+    expect(commands).toEqual(['/orbit:new', '/orbit:continue', '/orbit:apply']);
   });
 
   it('returns lifecycle order regardless of the order workflows are given', () => {
     const commands = getOnboardingCommands(['apply', 'continue', 'propose']).map((c) => c.command);
 
-    expect(commands).toEqual(['/opsx:propose', '/opsx:continue', '/opsx:apply']);
+    expect(commands).toEqual(['/orbit:propose', '/orbit:continue', '/orbit:apply']);
   });
 
   it('returns nothing when no onboarding workflow is installed', () => {
@@ -52,7 +52,7 @@ describe('formatOptionalWorkflowsNote', () => {
       'Note: 6 more workflows are available (new, continue, ff, bulk-archive, verify, onboard).'
     );
     expect(note?.[1]).toBe(
-      'Add them with `openspec config profile`.'
+      'Add them with `specorbit config profile`.'
     );
   });
 
@@ -73,7 +73,7 @@ describe('formatOptionalWorkflowsNote', () => {
 
     expect(note?.[0]).toBe('Note: 1 more workflow is available (onboard).');
     expect(note?.[1]).toBe(
-      'Add it with `openspec config profile`.'
+      'Add it with `specorbit config profile`.'
     );
   });
 

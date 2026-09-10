@@ -1,20 +1,20 @@
-# Migrating to OPSX
+# Migrating to Orbit
 
-This guide helps you transition from the legacy OpenSpec workflow to OPSX. The migration is designed to be smooth—your existing work is preserved, and the new system offers more flexibility.
+This guide helps you transition from the legacy SpecOrbit workflow to Orbit. The migration is designed to be smooth—your existing work is preserved, and the new system offers more flexibility.
 
 ## What's Changing?
 
-OPSX replaces the old phase-locked workflow with a fluid, action-based approach. Here's the key shift:
+Orbit replaces the old phase-locked workflow with a fluid, action-based approach. Here's the key shift:
 
-| Aspect | Legacy | OPSX |
+| Aspect | Legacy | Orbit |
 |--------|--------|------|
-| **Commands** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` | Default: `/opsx:propose`, `/opsx:explore`, `/opsx:apply`, `/opsx:update`, `/opsx:sync`, `/opsx:archive` (expanded workflow commands optional) |
+| **Commands** | `/specorbit:proposal`, `/specorbit:apply`, `/specorbit:archive` | Default: `/orbit:propose`, `/orbit:explore`, `/orbit:apply`, `/orbit:update`, `/orbit:sync`, `/orbit:archive` (expanded workflow commands optional) |
 | **Workflow** | Create all artifacts at once | Create incrementally or all at once—your choice |
 | **Going back** | Awkward phase gates | Natural—update any artifact anytime |
 | **Customization** | Fixed structure | Schema-driven, fully hackable |
-| **Configuration** | `CLAUDE.md` with markers + `project.md` | Clean config in `openspec/config.yaml` |
+| **Configuration** | `CLAUDE.md` with markers + `project.md` | Clean config in `specorbit/config.yaml` |
 
-**The philosophy change:** Work isn't linear. OPSX stops pretending it is.
+**The philosophy change:** Work isn't linear. Orbit stops pretending it is.
 
 ---
 
@@ -24,51 +24,51 @@ OPSX replaces the old phase-locked workflow with a fluid, action-based approach.
 
 The migration process is designed with preservation in mind:
 
-- **Active changes in `openspec/changes/`** — Completely preserved. You can continue them with OPSX commands.
+- **Active changes in `specorbit/changes/`** — Completely preserved. You can continue them with Orbit commands.
 - **Archived changes** — Untouched. Your history remains intact.
-- **Main specs in `openspec/specs/`** — Untouched. These are your source of truth.
-- **Your content in CLAUDE.md, AGENTS.md, etc.** — Preserved. Only the OpenSpec marker blocks are removed; everything you wrote stays.
+- **Main specs in `specorbit/specs/`** — Untouched. These are your source of truth.
+- **Your content in CLAUDE.md, AGENTS.md, etc.** — Preserved. Only the SpecOrbit marker blocks are removed; everything you wrote stays.
 
 ### What Gets Removed
 
-Only OpenSpec-managed files that are being replaced:
+Only SpecOrbit-managed files that are being replaced:
 
 | What | Why |
 |------|-----|
 | Legacy slash command directories/files | Replaced by the new skills system |
-| `openspec/AGENTS.md` | Obsolete workflow trigger |
-| OpenSpec markers in `CLAUDE.md`, `AGENTS.md`, etc. | No longer needed |
+| `specorbit/AGENTS.md` | Obsolete workflow trigger |
+| SpecOrbit markers in `CLAUDE.md`, `AGENTS.md`, etc. | No longer needed |
 
 **Legacy command locations by tool** (examples—your tool may vary):
 
-- Claude Code: `.claude/commands/openspec/`
-- Cursor: `.cursor/commands/openspec-*.md`
-- Devin Desktop, formerly Windsurf: `.windsurf/workflows/openspec-*.md`
-- Cline: `.clinerules/workflows/openspec-*.md`
-- Roo: `.roo/commands/openspec-*.md`
-- GitHub Copilot: `.github/prompts/openspec-*.prompt.md` (IDE extensions only; not supported in Copilot CLI)
-- Codex: OpenSpec now uses the canonical `.agents/skills/openspec-*` path. OpenSpec-managed `SKILL.md` files under the former `.codex/skills` path are reconciled only after replacements exist; custom files and divergent copies stay in place. If an unmarked `.agents` tree already contains OpenSpec skills, OpenSpec preserves its existing Codex (`$openspec-*`) or generic (`/openspec-*`) rendering instead of guessing from the legacy directory. Select `codex` explicitly with `openspec init` to switch ownership. Legacy prompt cleanup still targets only OpenSpec's allowlisted filenames in `$CODEX_HOME/prompts` or `~/.codex/prompts`.
+- Claude Code: `.claude/commands/specorbit/`
+- Cursor: `.cursor/commands/specorbit-*.md`
+- Devin Desktop, formerly Windsurf: `.windsurf/workflows/specorbit-*.md`
+- Cline: `.clinerules/workflows/specorbit-*.md`
+- Roo: `.roo/commands/specorbit-*.md`
+- GitHub Copilot: `.github/prompts/specorbit-*.prompt.md` (IDE extensions only; not supported in Copilot CLI)
+- Codex: SpecOrbit now uses the canonical `.agents/skills/specorbit-*` path. SpecOrbit-managed `SKILL.md` files under the former `.codex/skills` path are reconciled only after replacements exist; custom files and divergent copies stay in place. If an unmarked `.agents` tree already contains SpecOrbit skills, SpecOrbit preserves its existing Codex (`$specorbit-*`) or generic (`/specorbit-*`) rendering instead of guessing from the legacy directory. Select `codex` explicitly with `specorbit init` to switch ownership. Legacy prompt cleanup still targets only SpecOrbit's allowlisted filenames in `$CODEX_HOME/prompts` or `~/.codex/prompts`.
 - And others (Augment, Continue, Amazon Q, etc.)
 
 The migration detects whichever tools you have configured and cleans up their legacy files.
 
-The removal list may seem long, but these are all files that OpenSpec originally created. Your own content is never deleted.
+The removal list may seem long, but these are all files that SpecOrbit originally created. Your own content is never deleted.
 
 ### What Needs Your Attention
 
 One file requires manual migration:
 
-**`openspec/project.md`** — This file isn't deleted automatically because it may contain project context you've written. You'll need to:
+**`specorbit/project.md`** — This file isn't deleted automatically because it may contain project context you've written. You'll need to:
 
 1. Review its contents
-2. Move useful context to `openspec/config.yaml` (see guidance below)
+2. Move useful context to `specorbit/config.yaml` (see guidance below)
 3. Delete the file when ready
 
 **Why we made this change:**
 
 The old `project.md` was passive—agents might read it, might not, might forget what they read. We found reliability was inconsistent.
 
-The new `config.yaml` context is **actively injected into every OpenSpec planning request**. This means your project conventions, tech stack, and rules are always present when the AI is creating artifacts. Higher reliability.
+The new `config.yaml` context is **actively injected into every SpecOrbit planning request**. This means your project conventions, tech stack, and rules are always present when the AI is creating artifacts. Higher reliability.
 
 **The tradeoff:**
 
@@ -83,44 +83,44 @@ Don't worry about getting it perfect. We're still learning what works best here,
 
 ## Running the Migration
 
-Both `openspec init` and `openspec update` detect legacy files and guide you through the same cleanup process. Use whichever fits your situation:
+Both `specorbit init` and `specorbit update` detect legacy files and guide you through the same cleanup process. Use whichever fits your situation:
 
 - New installs default to profile `core` (`propose`, `explore`, `apply`, `update`, `sync`, `archive`).
 - Migrated installs preserve your previously installed workflows by writing a `custom` profile when needed.
 
-### Using `openspec init`
+### Using `specorbit init`
 
 Run this if you want to add new tools or reconfigure which tools are set up:
 
 ```bash
-openspec init
+specorbit init
 ```
 
 The init command detects legacy files and guides you through cleanup:
 
 ```
-Upgrading to the new OpenSpec
+Upgrading to the new SpecOrbit
 
-OpenSpec now uses agent skills, the emerging standard across coding
+SpecOrbit now uses agent skills, the emerging standard across coding
 agents. This simplifies your setup while keeping everything working
 as before.
 
 Files to remove
 No user content to preserve:
-  • .claude/commands/openspec/
-  • openspec/AGENTS.md
+  • .claude/commands/specorbit/
+  • specorbit/AGENTS.md
 
 Files to update
-OpenSpec markers will be removed, your content preserved:
+SpecOrbit markers will be removed, your content preserved:
   • CLAUDE.md
   • AGENTS.md
 
 Needs your attention
-  • openspec/project.md
+  • specorbit/project.md
     We won't delete this file. It may contain useful project context.
 
-    The new openspec/config.yaml has a "context:" section for planning
-    context. This is included in every OpenSpec request and works more
+    The new specorbit/config.yaml has a "context:" section for planning
+    context. This is included in every SpecOrbit request and works more
     reliably than the old project.md approach.
 
     Review project.md, move any useful content to config.yaml's context
@@ -132,17 +132,17 @@ Needs your attention
 **What happens when you say yes:**
 
 1. Legacy slash command directories are removed
-2. OpenSpec markers are stripped from `CLAUDE.md`, `AGENTS.md`, etc. (your content stays)
-3. `openspec/AGENTS.md` is deleted
+2. SpecOrbit markers are stripped from `CLAUDE.md`, `AGENTS.md`, etc. (your content stays)
+3. `specorbit/AGENTS.md` is deleted
 4. New skills are installed in `.claude/skills/`
-5. `openspec/config.yaml` is created with a default schema
+5. `specorbit/config.yaml` is created with a default schema
 
-### Using `openspec update`
+### Using `specorbit update`
 
 Run this if you just want to migrate and refresh your existing tools to the latest version:
 
 ```bash
-openspec update
+specorbit update
 ```
 
 The update command also detects and cleans up legacy artifacts, then refreshes generated skills/commands to match your current profile and delivery settings.
@@ -152,18 +152,18 @@ The update command also detects and cleans up legacy artifacts, then refreshes g
 For scripted migrations:
 
 ```bash
-openspec init --force --tools claude
+specorbit init --force --tools claude
 ```
 
 The `--force` flag skips prompts and auto-accepts cleanup.
 
-This includes cleanup of OpenSpec-managed Codex prompt files in the global Codex prompt directory. Cleanup only targets OpenSpec's allowlisted legacy Codex prompt filenames, removes them only after replacement `.agents/skills/openspec-*` skills exist, and preserves all other files.
+This includes cleanup of SpecOrbit-managed Codex prompt files in the global Codex prompt directory. Cleanup only targets SpecOrbit's allowlisted legacy Codex prompt filenames, removes them only after replacement `.agents/skills/specorbit-*` skills exist, and preserves all other files.
 
 ---
 
 ## Migrating project.md to config.yaml
 
-The old `openspec/project.md` was a freeform markdown file for project context. The new `openspec/config.yaml` is structured and—critically—**injected into every planning request** so your conventions are always present when the AI works.
+The old `specorbit/project.md` was a freeform markdown file for project context. The new `specorbit/config.yaml` is structured and—critically—**injected into every planning request** so your conventions are always present when the AI works.
 
 ### Before (project.md)
 
@@ -263,7 +263,7 @@ When migrating, be selective. Ask yourself: "Does the AI need this for *every* p
 If you're unsure how to distill your project.md, ask your AI assistant:
 
 ```
-I'm migrating from OpenSpec's old project.md to the new config.yaml format.
+I'm migrating from SpecOrbit's old project.md to the new config.yaml format.
 
 Here's my current project.md:
 [paste your project.md content]
@@ -287,33 +287,33 @@ Command availability is profile-dependent:
 
 | Command | Purpose |
 |---------|---------|
-| `/opsx:propose` | Create a change and generate planning artifacts in one step |
-| `/opsx:explore` | Think through ideas with no structure |
-| `/opsx:apply` | Implement tasks from tasks.md |
-| `/opsx:update` | Revise a change's planning artifacts and keep them coherent |
-| `/opsx:sync` | Merge delta specs into main specs |
-| `/opsx:archive` | Finalize and archive the change |
+| `/orbit:propose` | Create a change and generate planning artifacts in one step |
+| `/orbit:explore` | Think through ideas with no structure |
+| `/orbit:apply` | Implement tasks from tasks.md |
+| `/orbit:update` | Revise a change's planning artifacts and keep them coherent |
+| `/orbit:sync` | Merge delta specs into main specs |
+| `/orbit:archive` | Finalize and archive the change |
 
 **Expanded workflow (custom selection):**
 
 | Command | Purpose |
 |---------|---------|
-| `/opsx:new` | Start a new change scaffold |
-| `/opsx:continue` | Create the next artifact (one at a time) |
-| `/opsx:ff` | Fast-forward—create planning artifacts at once |
-| `/opsx:verify` | Validate implementation matches specs |
-| `/opsx:bulk-archive` | Archive multiple changes at once |
-| `/opsx:onboard` | Guided end-to-end onboarding workflow |
+| `/orbit:new` | Start a new change scaffold |
+| `/orbit:continue` | Create the next artifact (one at a time) |
+| `/orbit:ff` | Fast-forward—create planning artifacts at once |
+| `/orbit:verify` | Validate implementation matches specs |
+| `/orbit:bulk-archive` | Archive multiple changes at once |
+| `/orbit:onboard` | Guided end-to-end onboarding workflow |
 
-Enable expanded commands with `openspec config profile`, then run `openspec update`.
+Enable expanded commands with `specorbit config profile`, then run `specorbit update`.
 
 ### Command Mapping from Legacy
 
-| Legacy | OPSX Equivalent |
+| Legacy | Orbit Equivalent |
 |--------|-----------------|
-| `/openspec:proposal` | `/opsx:propose` (default) or `/opsx:new` then `/opsx:ff` (expanded) |
-| `/openspec:apply` | `/opsx:apply` |
-| `/openspec:archive` | `/opsx:archive` |
+| `/specorbit:proposal` | `/orbit:propose` (default) or `/orbit:new` then `/orbit:ff` (expanded) |
+| `/specorbit:apply` | `/orbit:apply` |
+| `/specorbit:archive` | `/orbit:archive` |
 
 ### New Capabilities
 
@@ -321,13 +321,13 @@ These capabilities are part of the expanded workflow command set.
 
 **Granular artifact creation:**
 ```
-/opsx:continue
+/orbit:continue
 ```
 Creates one artifact at a time based on dependencies. Use this when you want to review each step.
 
 **Exploration mode:**
 ```
-/opsx:explore
+/orbit:explore
 ```
 Think through ideas with a partner before committing to a change.
 
@@ -349,7 +349,7 @@ If you're in implementation and realize the design is wrong?
 Too bad. Phase gates don't let you go back easily.
 ```
 
-OPSX uses actions, not phases:
+Orbit uses actions, not phases:
 
 ```
          ┌───────────────────────────────────────────────┐
@@ -385,52 +385,52 @@ Artifacts form a directed graph. Dependencies are enablers, not gates:
                      specs, design)
 ```
 
-When you run `/opsx:continue`, it checks what's ready and offers the next artifact. You can also create multiple ready artifacts in any order.
+When you run `/orbit:continue`, it checks what's ready and offers the next artifact. You can also create multiple ready artifacts in any order.
 
 ### Skills vs Commands
 
 The legacy system used tool-specific command files:
 
 ```
-.claude/commands/openspec/
+.claude/commands/specorbit/
 ├── proposal.md
 ├── apply.md
 └── archive.md
 ```
 
-OPSX uses the emerging **skills** standard:
+Orbit uses the emerging **skills** standard:
 
 ```
 .claude/skills/
-├── openspec-explore/SKILL.md
-├── openspec-new-change/SKILL.md
-├── openspec-continue-change/SKILL.md
-├── openspec-apply-change/SKILL.md
+├── specorbit-explore/SKILL.md
+├── specorbit-new-change/SKILL.md
+├── specorbit-continue-change/SKILL.md
+├── specorbit-apply-change/SKILL.md
 └── ...
 ```
 
 Skills are recognized across multiple AI coding tools and provide richer metadata.
 
-Codex is skills-only in OPSX. OpenSpec no longer generates Codex custom prompt files; use the generated `.agents/skills/openspec-*` directories instead.
+Codex is skills-only in Orbit. SpecOrbit no longer generates Codex custom prompt files; use the generated `.agents/skills/specorbit-*` directories instead.
 
 ---
 
 ## Continuing Existing Changes
 
-Your in-progress changes work seamlessly with OPSX commands.
+Your in-progress changes work seamlessly with Orbit commands.
 
 **Have an active change from the legacy workflow?**
 
 ```
-/opsx:apply add-my-feature
+/orbit:apply add-my-feature
 ```
 
-OPSX reads the existing artifacts and continues from where you left off.
+Orbit reads the existing artifacts and continues from where you left off.
 
 **Want to add more artifacts to an existing change?**
 
 ```
-/opsx:continue add-my-feature
+/orbit:continue add-my-feature
 ```
 
 Shows what's ready to create based on what already exists.
@@ -438,7 +438,7 @@ Shows what's ready to create based on what already exists.
 **Need to see status?**
 
 ```bash
-openspec status --change add-my-feature
+specorbit status --change add-my-feature
 ```
 
 ---
@@ -472,11 +472,11 @@ rules:
 
 ### Schema Resolution
 
-When determining which schema to use, OPSX checks in order:
+When determining which schema to use, Orbit checks in order:
 
 1. **CLI flag**: `--schema <name>` (highest priority)
-2. **Change metadata**: `.openspec.yaml` in the change directory
-3. **Project config**: `openspec/config.yaml`
+2. **Change metadata**: `.specorbit.yaml` in the change directory
+3. **Project config**: `specorbit/config.yaml`
 4. **Default**: `spec-driven`
 
 ### Available Schemas
@@ -488,7 +488,7 @@ When determining which schema to use, OPSX checks in order:
 List all available schemas:
 
 ```bash
-openspec schemas
+specorbit schemas
 ```
 
 ### Custom Schemas
@@ -496,13 +496,13 @@ openspec schemas
 Create your own workflow:
 
 ```bash
-openspec schema init my-workflow
+specorbit schema init my-workflow
 ```
 
 Or fork an existing one:
 
 ```bash
-openspec schema fork spec-driven my-workflow
+specorbit schema fork spec-driven my-workflow
 ```
 
 See [Customization](customization.md) for details.
@@ -516,7 +516,7 @@ See [Customization](customization.md) for details.
 You're running in a CI or non-interactive environment. Use:
 
 ```bash
-openspec init --force
+specorbit init --force
 ```
 
 ### Commands not appearing after migration
@@ -532,12 +532,12 @@ Check that your `rules:` keys match your schema's artifact IDs:
 Run this to see valid artifact IDs:
 
 ```bash
-openspec schemas --json
+specorbit schemas --json
 ```
 
 ### Config not being applied
 
-1. Ensure the file is at `openspec/config.yaml` (not `.yml`)
+1. Ensure the file is at `specorbit/config.yaml` (not `.yml`)
 2. Validate YAML syntax
 3. Config changes take effect immediately—no restart needed
 
@@ -557,42 +557,42 @@ Run init and decline the cleanup prompt—you'll see the full detection summary 
 
 ```
 project/
-├── openspec/
+├── specorbit/
 │   ├── specs/                    # Unchanged
 │   ├── changes/                  # Unchanged
 │   │   └── archive/              # Unchanged
 │   └── config.yaml               # NEW: Project configuration
 ├── .claude/
-│   └── skills/                   # NEW: OPSX skills
-│       ├── openspec-propose/     # default core profile
-│       ├── openspec-explore/
-│       ├── openspec-apply-change/
-│       ├── openspec-update-change/
-│       ├── openspec-sync-specs/
-│       ├── openspec-archive-change/
+│   └── skills/                   # NEW: Orbit skills
+│       ├── specorbit-propose/     # default core profile
+│       ├── specorbit-explore/
+│       ├── specorbit-apply-change/
+│       ├── specorbit-update-change/
+│       ├── specorbit-sync-specs/
+│       ├── specorbit-archive-change/
 │       └── ...                   # expanded profile adds new/continue/ff/etc.
-├── CLAUDE.md                     # OpenSpec markers removed, your content preserved
-└── AGENTS.md                     # OpenSpec markers removed, your content preserved
+├── CLAUDE.md                     # SpecOrbit markers removed, your content preserved
+└── AGENTS.md                     # SpecOrbit markers removed, your content preserved
 ```
 
 ### What's Gone
 
-- `.claude/commands/openspec/` — replaced by `.claude/skills/`
-- `openspec/AGENTS.md` — obsolete
-- `openspec/project.md` — migrate to `config.yaml`, then delete
-- OpenSpec marker blocks in `CLAUDE.md`, `AGENTS.md`, etc.
+- `.claude/commands/specorbit/` — replaced by `.claude/skills/`
+- `specorbit/AGENTS.md` — obsolete
+- `specorbit/project.md` — migrate to `config.yaml`, then delete
+- SpecOrbit marker blocks in `CLAUDE.md`, `AGENTS.md`, etc.
 
 ### Command Cheatsheet
 
 ```text
-/opsx:propose      Start quickly (default core profile)
-/opsx:apply        Implement tasks
-/opsx:archive      Finish and archive
+/orbit:propose      Start quickly (default core profile)
+/orbit:apply        Implement tasks
+/orbit:archive      Finish and archive
 
 # Expanded workflow (if enabled):
-/opsx:new          Scaffold a change
-/opsx:continue     Create next artifact
-/opsx:ff           Create planning artifacts
+/orbit:new          Scaffold a change
+/orbit:continue     Create next artifact
+/orbit:ff           Create planning artifacts
 ```
 
 ---
@@ -600,5 +600,5 @@ project/
 ## Getting Help
 
 - **Discord**: [discord.gg/YctCnvvshC](https://discord.gg/YctCnvvshC)
-- **GitHub Issues**: [github.com/Fission-AI/OpenSpec/issues](https://github.com/Fission-AI/OpenSpec/issues)
-- **Documentation**: [docs/opsx.md](opsx.md) for the full OPSX reference
+- **GitHub Issues**: [github.com/specorbit/specorbit/issues](https://github.com/specorbit/specorbit/issues)
+- **Documentation**: [docs/orbit.md](orbit.md) for the full Orbit reference

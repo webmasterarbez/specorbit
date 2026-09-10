@@ -1,11 +1,11 @@
 # Getting Started
 
-This guide explains how OpenSpec works after you've installed and initialized it. For installation instructions, see the [main README](../README.md#quick-start) or the [Installation guide](installation.md). New to the whole docs set? The [documentation home](README.md) maps everything.
+This guide explains how SpecOrbit works after you've installed and initialized it. For installation instructions, see the [main README](../README.md#quick-start) or the [Installation guide](installation.md). New to the whole docs set? The [documentation home](README.md) maps everything.
 
 > **Where do I type these commands?** Two places, and mixing them up is the most common early stumble.
 >
-> - `openspec ...` commands (like `openspec init`) run in your **terminal**.
-> - `/opsx:...` commands (like `/opsx:propose`) run in your **AI assistant's chat**, the same box where you'd ask it to write code.
+> - `specorbit ...` commands (like `specorbit init`) run in your **terminal**.
+> - `/orbit:...` commands (like `/orbit:propose`) run in your **AI assistant's chat**, the same box where you'd ask it to write code.
 >
 > There's no separate "interactive mode" to start. You just type the slash command in chat and your assistant takes it from there. Full explanation: [How Commands Work](how-commands-work.md).
 
@@ -14,47 +14,47 @@ This guide explains how OpenSpec works after you've installed and initialized it
 The whole loop, with each step labeled by where it happens:
 
 ```text
-TERMINAL   $ npm install -g @fission-ai/openspec@latest
-TERMINAL   $ cd your-project && openspec init
-AI CHAT      /opsx:explore                    (optional: think it through first)
-AI CHAT      /opsx:propose add-dark-mode      (AI drafts the plan; you review it)
-AI CHAT      /opsx:apply                      (AI builds it)
-AI CHAT      /opsx:archive                    (specs updated, change filed away)
+TERMINAL   $ npm install -g specorbit@latest
+TERMINAL   $ cd your-project && specorbit init
+AI CHAT      /orbit:explore                    (optional: think it through first)
+AI CHAT      /orbit:propose add-dark-mode      (AI drafts the plan; you review it)
+AI CHAT      /orbit:apply                      (AI builds it)
+AI CHAT      /orbit:archive                    (specs updated, change filed away)
 ```
 
 Two terminal steps to set up, then you live in chat. The rest of this guide unpacks what each step does and what you'll see.
 
 **Don't want to do the terminal part yourself?** Paste the [setup prompt](installation.md#install-with-your-ai-assistant) into your assistant and it handles both lines, then reports what it created.
 
-> **Not sure what to build yet? Start with `/opsx:explore`.** It's a no-stakes thinking partner that reads your codebase, weighs options, and sharpens a fuzzy idea into a concrete plan, all before any artifact or code exists. When the picture is clear, it hands off to `/opsx:propose`. This is the single best habit for working with an AI that will otherwise confidently build the wrong thing. See the [Explore guide](explore.md).
+> **Not sure what to build yet? Start with `/orbit:explore`.** It's a no-stakes thinking partner that reads your codebase, weighs options, and sharpens a fuzzy idea into a concrete plan, all before any artifact or code exists. When the picture is clear, it hands off to `/orbit:propose`. This is the single best habit for working with an AI that will otherwise confidently build the wrong thing. See the [Explore guide](explore.md).
 
 ## How It Works
 
-OpenSpec helps you and your AI coding assistant agree on what to build before any code is written.
+SpecOrbit helps you and your AI coding assistant agree on what to build before any code is written.
 
 **Default quick path (core profile):**
 
 ```text
-/opsx:explore ──► /opsx:propose ──► /opsx:apply ──► /opsx:sync ──► /opsx:archive
+/orbit:explore ──► /orbit:propose ──► /orbit:apply ──► /orbit:sync ──► /orbit:archive
    (optional)
 ```
 
-Start with `/opsx:explore` when you're figuring out what to do, or jump straight to `/opsx:propose` when you already know. Explore is in the default profile, so it's always there when you want it.
+Start with `/orbit:explore` when you're figuring out what to do, or jump straight to `/orbit:propose` when you already know. Explore is in the default profile, so it's always there when you want it.
 
 **Expanded path (custom workflow selection):**
 
 ```text
-/opsx:new ──► /opsx:ff or /opsx:continue ──► /opsx:apply ──► /opsx:verify ──► /opsx:archive
+/orbit:new ──► /orbit:ff or /orbit:continue ──► /orbit:apply ──► /orbit:verify ──► /orbit:archive
 ```
 
-The default global profile is `core`, which includes `propose`, `explore`, `apply`, `update`, `sync`, and `archive`. You can enable the expanded workflow commands with `openspec config profile` and then `openspec update`.
+The default global profile is `core`, which includes `propose`, `explore`, `apply`, `update`, `sync`, and `archive`. You can enable the expanded workflow commands with `specorbit config profile` and then `specorbit update`.
 
-## What OpenSpec Creates
+## What SpecOrbit Creates
 
-After running `openspec init`, your project has this structure:
+After running `specorbit init`, your project has this structure:
 
 ```
-openspec/
+specorbit/
 ├── specs/              # Source of truth (your system's behavior)
 │   └── <domain>/
 │       └── spec.md
@@ -99,7 +99,7 @@ You can always go back and refine earlier artifacts as you learn more during imp
 
 ## How Delta Specs Work
 
-Delta specs are the key concept in OpenSpec. They show what's changing relative to your current specs.
+Delta specs are the key concept in SpecOrbit. They show what's changing relative to your current specs.
 
 ### The Format
 
@@ -143,7 +143,7 @@ When you archive a change:
 2. **MODIFIED** requirements replace the existing version
 3. **REMOVED** requirements are deleted from the main spec
 
-The change folder moves to `openspec/changes/archive/` for audit history.
+The change folder moves to `specorbit/changes/archive/` for audit history.
 
 ## Example: Your First Change
 
@@ -152,9 +152,9 @@ Let's walk through adding dark mode to an application.
 ### 1. Start the Change (Default)
 
 ```text
-You: /opsx:propose add-dark-mode
+You: /orbit:propose add-dark-mode
 
-AI:  Created openspec/changes/add-dark-mode/
+AI:  Created specorbit/changes/add-dark-mode/
      ✓ proposal.md — why we're doing this, what's changing
      ✓ specs/       — requirements and scenarios
      ✓ design.md    — technical approach
@@ -162,7 +162,7 @@ AI:  Created openspec/changes/add-dark-mode/
      Ready for implementation!
 ```
 
-If you've enabled the expanded workflow profile, you can also do this as two steps: `/opsx:new` then `/opsx:ff` (or `/opsx:continue` incrementally).
+If you've enabled the expanded workflow profile, you can also do this as two steps: `/orbit:new` then `/orbit:ff` (or `/orbit:continue` incrementally).
 
 ### 2. What Gets Created
 
@@ -230,7 +230,7 @@ The system SHALL allow users to choose between light and dark themes.
 ### 3. Implement
 
 ```
-You: /opsx:apply
+You: /orbit:apply
 
 AI:  Working through tasks...
      ✓ 1.1 Created ThemeContext with light/dark state
@@ -246,11 +246,11 @@ During implementation, if you discover the design needs adjustment, just update 
 ### 4. Archive
 
 ```
-You: /opsx:archive
+You: /orbit:archive
 
 AI:  Archiving add-dark-mode...
-     ✓ Merged specs into openspec/specs/ui/spec.md
-     ✓ Moved to openspec/changes/archive/2025-01-24-add-dark-mode/
+     ✓ Merged specs into specorbit/specs/ui/spec.md
+     ✓ Moved to specorbit/changes/archive/2025-01-24-add-dark-mode/
      Done! Ready for the next feature.
 ```
 
@@ -262,30 +262,30 @@ Use the CLI to check on your changes:
 
 ```bash
 # List active changes
-openspec list
+specorbit list
 
 # View change details
-openspec show add-dark-mode
+specorbit show add-dark-mode
 
 # Validate spec formatting
-openspec validate add-dark-mode
+specorbit validate add-dark-mode
 
 # Interactive dashboard
-openspec view
+specorbit view
 ```
 
 ## Next Steps
 
-- [Explore First](explore.md) - Use `/opsx:explore` to think through an idea before you commit
+- [Explore First](explore.md) - Use `/orbit:explore` to think through an idea before you commit
 - [Reviewing a Change](reviewing-changes.md) - What to check in the plan the AI drafts, before any code
 - [Writing Good Specs](writing-specs.md) - What a strong requirement and scenario look like
-- [Using OpenSpec in an Existing Project](existing-projects.md) - Start on a large brownfield codebase
+- [Using SpecOrbit in an Existing Project](existing-projects.md) - Start on a large brownfield codebase
 - [Editing & Iterating on a Change](editing-changes.md) - Update artifacts, go back, reconcile manual edits
 - [Core Concepts at a Glance](overview.md) - The whole mental model on one page
 - [Examples & Recipes](examples.md) - Real changes, start to finish
 - [Workflows](workflows.md) - Common patterns and when to use each command
 - [Commands](commands.md) - Full reference for all slash commands
 - [Concepts](concepts.md) - Deeper understanding of specs, changes, and schemas
-- [Customization](customization.md) - Make OpenSpec work your way
+- [Customization](customization.md) - Make SpecOrbit work your way
 - [Stores](stores-beta/user-guide.md) - Planning that spans repos or teams? Keep it in its own repo (beta)
 - [FAQ](faq.md) and [Troubleshooting](troubleshooting.md) - When you get stuck

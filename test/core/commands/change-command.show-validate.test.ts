@@ -13,8 +13,8 @@ describe('ChangeCommand.show/validate', () => {
   beforeAll(async () => {
     cmd = new ChangeCommand();
     originalCwd = process.cwd();
-    tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'openspec-change-command-'));
-    const changesDir = path.join(tempRoot, 'openspec', 'changes', 'sample-change');
+    tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'specorbit-change-command-'));
+    const changesDir = path.join(tempRoot, 'specorbit', 'changes', 'sample-change');
     await fs.mkdir(changesDir, { recursive: true });
     const proposal = `# Change: Sample Change\n\n## Why\nConsistency in tests.\n\n## What Changes\n- **auth:** Add requirement`;
     await fs.writeFile(path.join(changesDir, 'proposal.md'), proposal, 'utf-8');
@@ -91,15 +91,15 @@ describe('ChangeCommand.show/validate', () => {
 
   describe('resolving a change that has no proposal.md', () => {
     it('names the missing proposal and points at status', async () => {
-      await fs.mkdir(path.join(tempRoot, 'openspec', 'changes', 'scaffolded'), { recursive: true });
+      await fs.mkdir(path.join(tempRoot, 'specorbit', 'changes', 'scaffolded'), { recursive: true });
 
       await expect(cmd.show('scaffolded', { json: false })).rejects.toThrow(
-        /Change "scaffolded" has no proposal\.md yet\..*openspec status --change scaffolded/s
+        /Change "scaffolded" has no proposal\.md yet\..*specorbit status --change scaffolded/s
       );
     });
 
     it('does not treat a stray file under changes/ as a change', async () => {
-      await fs.writeFile(path.join(tempRoot, 'openspec', 'changes', 'notes.md'), 'not a change', 'utf-8');
+      await fs.writeFile(path.join(tempRoot, 'specorbit', 'changes', 'notes.md'), 'not a change', 'utf-8');
 
       // Must stay the plain not-found error: `status --change notes.md` cannot work.
       await expect(cmd.show('notes.md', { json: false })).rejects.toThrow(/not found at/);
@@ -107,7 +107,7 @@ describe('ChangeCommand.show/validate', () => {
     });
 
     it('does not read a proposal outside changes/ via a traversing name', async () => {
-      // Reachable target: openspec/changes/../../proposal.md is tempRoot/proposal.md.
+      // Reachable target: specorbit/changes/../../proposal.md is tempRoot/proposal.md.
       // Without containment this resolves and the file is printed verbatim.
       await fs.writeFile(path.join(tempRoot, 'proposal.md'), '# Outside the changes directory', 'utf-8');
       const traversal = path.join('..', '..');
@@ -122,7 +122,7 @@ describe('ChangeCommand.show/validate', () => {
         const outsideProposal = path.join(tempRoot, 'outside-proposal.md');
         const linkedProposal = path.join(
           tempRoot,
-          'openspec',
+          'specorbit',
           'changes',
           'linked-proposal',
           'proposal.md'
@@ -149,7 +149,7 @@ describe('ChangeCommand.show/validate', () => {
         );
         await fs.symlink(
           sharedChange,
-          path.join(tempRoot, 'openspec', 'changes', 'shared-change')
+          path.join(tempRoot, 'specorbit', 'changes', 'shared-change')
         );
 
         await expect(cmd.show('shared-change', { json: false })).resolves.toBeUndefined();
@@ -158,7 +158,7 @@ describe('ChangeCommand.show/validate', () => {
 
     it('does not treat a nested name as a change', async () => {
       const nested = path.join('sample-change', 'specs');
-      await fs.mkdir(path.join(tempRoot, 'openspec', 'changes', 'sample-change', 'specs'), { recursive: true });
+      await fs.mkdir(path.join(tempRoot, 'specorbit', 'changes', 'sample-change', 'specs'), { recursive: true });
 
       await expect(cmd.show(nested, { json: false })).rejects.toThrow(/not found at/);
       await expect(cmd.show(nested, { json: false })).rejects.not.toThrow(/has no proposal\.md yet/);

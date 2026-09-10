@@ -141,7 +141,7 @@ describe('createChange', () => {
   const originalTimeZone = process.env.TZ;
 
   beforeEach(async () => {
-    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'openspec-test-'));
+    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'specorbit-test-'));
   });
 
   afterEach(async () => {
@@ -158,7 +158,7 @@ describe('createChange', () => {
     it('should create change directory', async () => {
       await createChange(testDir, 'add-auth');
 
-      const changeDir = path.join(testDir, 'openspec', 'changes', 'add-auth');
+      const changeDir = path.join(testDir, 'specorbit', 'changes', 'add-auth');
       const stats = await fs.stat(changeDir);
       expect(stats.isDirectory()).toBe(true);
     });
@@ -166,15 +166,15 @@ describe('createChange', () => {
     it('should create a numeric-prefixed change directory (#850, #1169)', async () => {
       await createChange(testDir, '100-add-feature');
 
-      const changeDir = path.join(testDir, 'openspec', 'changes', '100-add-feature');
+      const changeDir = path.join(testDir, 'specorbit', 'changes', '100-add-feature');
       const stats = await fs.stat(changeDir);
       expect(stats.isDirectory()).toBe(true);
     });
 
-    it('should create .openspec.yaml metadata file with default schema', async () => {
+    it('should create .specorbit.yaml metadata file with default schema', async () => {
       await createChange(testDir, 'add-auth');
 
-      const metaPath = path.join(testDir, 'openspec', 'changes', 'add-auth', '.openspec.yaml');
+      const metaPath = path.join(testDir, 'specorbit', 'changes', 'add-auth', '.specorbit.yaml');
       const content = await fs.readFile(metaPath, 'utf-8');
       expect(content).toContain('schema: spec-driven');
       expect(content).toMatch(/created: \d{4}-\d{2}-\d{2}/);
@@ -187,7 +187,7 @@ describe('createChange', () => {
 
       await createChange(testDir, 'local-date-change');
 
-      const metaPath = path.join(testDir, 'openspec', 'changes', 'local-date-change', '.openspec.yaml');
+      const metaPath = path.join(testDir, 'specorbit', 'changes', 'local-date-change', '.specorbit.yaml');
       const content = await fs.readFile(metaPath, 'utf-8');
       expect(content).toContain('created: 2026-07-15');
     });
@@ -199,15 +199,15 @@ describe('createChange', () => {
 
       await createChange(testDir, 'same-date-change');
 
-      const metaPath = path.join(testDir, 'openspec', 'changes', 'same-date-change', '.openspec.yaml');
+      const metaPath = path.join(testDir, 'specorbit', 'changes', 'same-date-change', '.specorbit.yaml');
       const content = await fs.readFile(metaPath, 'utf-8');
       expect(content).toContain('created: 2026-01-05');
     });
 
-    it('should create .openspec.yaml with custom schema', async () => {
+    it('should create .specorbit.yaml with custom schema', async () => {
       await createChange(testDir, 'add-auth', { schema: 'spec-driven' });
 
-      const metaPath = path.join(testDir, 'openspec', 'changes', 'add-auth', '.openspec.yaml');
+      const metaPath = path.join(testDir, 'specorbit', 'changes', 'add-auth', '.specorbit.yaml');
       const content = await fs.readFile(metaPath, 'utf-8');
       expect(content).toContain('schema: spec-driven');
     });
@@ -252,14 +252,14 @@ describe('createChange', () => {
   });
 
   describe('creates parent directories if needed', () => {
-    it('should create openspec/changes/ directories if they do not exist', async () => {
+    it('should create specorbit/changes/ directories if they do not exist', async () => {
       const newProjectDir = path.join(testDir, 'new-project');
       await fs.mkdir(newProjectDir);
 
-      // openspec/changes/ does not exist yet
+      // specorbit/changes/ does not exist yet
       await createChange(newProjectDir, 'add-auth');
 
-      const changeDir = path.join(newProjectDir, 'openspec', 'changes', 'add-auth');
+      const changeDir = path.join(newProjectDir, 'specorbit', 'changes', 'add-auth');
       const stats = await fs.stat(changeDir);
       expect(stats.isDirectory()).toBe(true);
     });

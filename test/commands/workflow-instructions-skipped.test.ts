@@ -17,12 +17,12 @@ describe('printInstructionsText for skip_specs changes', () => {
   let tempDir: string;
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openspec-test-'));
-    const changeDir = path.join(tempDir, 'openspec', 'changes', 'my-change');
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'specorbit-test-'));
+    const changeDir = path.join(tempDir, 'specorbit', 'changes', 'my-change');
     fs.mkdirSync(changeDir, { recursive: true });
     fs.writeFileSync(path.join(changeDir, 'proposal.md'), '# Proposal');
     fs.writeFileSync(
-      path.join(changeDir, '.openspec.yaml'),
+      path.join(changeDir, '.specorbit.yaml'),
       'schema: spec-driven\nskip_specs: true\n'
     );
   });
@@ -105,7 +105,7 @@ describe('generateApplyInstructions for skip_specs changes', () => {
   let tempDir: string;
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openspec-test-'));
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'specorbit-test-'));
   });
 
   afterEach(() => {
@@ -115,7 +115,7 @@ describe('generateApplyInstructions for skip_specs changes', () => {
   it('does not block apply on a skipped artifact when the schema requires all artifacts', async () => {
     // A schema with no apply block falls back to requiring every artifact,
     // including the specs-producing one - the skip must count as present.
-    const schemaDir = path.join(tempDir, 'openspec', 'schemas', 'mini');
+    const schemaDir = path.join(tempDir, 'specorbit', 'schemas', 'mini');
     fs.mkdirSync(schemaDir, { recursive: true });
     fs.writeFileSync(
       path.join(schemaDir, 'schema.yaml'),
@@ -140,12 +140,12 @@ describe('generateApplyInstructions for skip_specs changes', () => {
         '',
       ].join('\n')
     );
-    const changeDir = path.join(tempDir, 'openspec', 'changes', 'my-change');
+    const changeDir = path.join(tempDir, 'specorbit', 'changes', 'my-change');
     fs.mkdirSync(changeDir, { recursive: true });
     fs.writeFileSync(path.join(changeDir, 'proposal.md'), '# Proposal');
     fs.writeFileSync(path.join(changeDir, 'tasks.md'), '## 1. W\n\n- [ ] 1.1 Do\n');
     fs.writeFileSync(
-      path.join(changeDir, '.openspec.yaml'),
+      path.join(changeDir, '.specorbit.yaml'),
       'schema: mini\nskip_specs: true\n'
     );
 

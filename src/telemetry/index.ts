@@ -4,8 +4,8 @@
  * Privacy-first design:
  * - Only tracks command name and version
  * - No arguments, file paths, or content
- * - Opt-out via OPENSPEC_TELEMETRY=0, DO_NOT_TRACK=1, or
- *   `openspec config set telemetry.enabled false`
+ * - Opt-out via SPECORBIT_TELEMETRY=0, DO_NOT_TRACK=1, or
+ *   `specorbit config set telemetry.enabled false`
  * - Auto-disabled in CI environments
  * - Anonymous ID is a random UUID with no relation to the user
  *
@@ -28,7 +28,7 @@ import { getTelemetryConfig, updateTelemetryConfig } from './config.js';
 // This is safe to embed as it only allows sending events, not reading data
 const POSTHOG_API_KEY = 'phc_Hthu8YvaIJ9QaFKyTG4TbVwkbd5ktcAFzVTKeMmoW2g';
 // Using reverse proxy to avoid ad blockers and keep traffic on our domain
-const POSTHOG_HOST = 'https://edge.openspec.dev';
+const POSTHOG_HOST = 'https://edge.specorbit.dev';
 const TELEMETRY_REQUEST_TIMEOUT_MS = 1000;
 
 let anonymousId: string | null = null;
@@ -64,7 +64,7 @@ async function safeTelemetryFetch(url: string, options: RequestInit): Promise<Re
  * Check if telemetry is enabled.
  *
  * Precedence (first match wins):
- * 1. OPENSPEC_TELEMETRY=0 → disabled
+ * 1. SPECORBIT_TELEMETRY=0 → disabled
  * 2. DO_NOT_TRACK=1 → disabled
  * 3. CI set to a truthy/on value → disabled (same rule as version-check)
  * 4. global config telemetry.enabled === false → disabled
@@ -75,7 +75,7 @@ async function safeTelemetryFetch(url: string, options: RequestInit): Promise<Re
  */
 export function isTelemetryEnabled(): boolean {
   // Check explicit opt-out
-  if (process.env.OPENSPEC_TELEMETRY === '0') {
+  if (process.env.SPECORBIT_TELEMETRY === '0') {
     return false;
   }
 
@@ -153,7 +153,7 @@ function sendEvent(distinctId: string, event: string, properties: Record<string,
  * Track a command execution.
  *
  * @param commandName - The command name (e.g., 'init', 'change:apply')
- * @param version - The OpenSpec version
+ * @param version - The SpecOrbit version
  */
 export async function trackCommand(commandName: string, version: string): Promise<void> {
   if (!isTelemetryEnabled()) {
@@ -200,7 +200,7 @@ export async function maybeShowTelemetryNotice(
     // Display notice on stderr, not stdout: stdout is reserved for command
     // output (raw passthrough text, JSON, etc.) and must stay parser/pipe-safe.
     console.error(
-      'Note: OpenSpec collects anonymous usage stats. Opt out: OPENSPEC_TELEMETRY=0 or openspec config set telemetry.enabled false'
+      'Note: SpecOrbit collects anonymous usage stats. Opt out: SPECORBIT_TELEMETRY=0 or specorbit config set telemetry.enabled false'
     );
 
     // Mark as seen

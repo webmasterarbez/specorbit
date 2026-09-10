@@ -4,7 +4,7 @@ import path from 'path';
 import { tmpdir } from 'os';
 import { runCLI } from '../helpers/run-cli.js';
 
-describe('openspec validate checks task numbering (#1520)', () => {
+describe('specorbit validate checks task numbering (#1520)', () => {
   let projectDir: string;
 
   const write = async (relative: string, content: string) => {
@@ -47,14 +47,14 @@ describe('openspec validate checks task numbering (#1520)', () => {
   ].join('\n');
 
   beforeAll(async () => {
-    projectDir = await fs.mkdtemp(path.join(tmpdir(), 'openspec-task-numbering-e2e-'));
+    projectDir = await fs.mkdtemp(path.join(tmpdir(), 'specorbit-task-numbering-e2e-'));
 
     await write(
-      'openspec/changes/bad-numbering/specs/tasks/spec.md',
+      'specorbit/changes/bad-numbering/specs/tasks/spec.md',
       validDelta
     );
     await write(
-      'openspec/changes/bad-numbering/tasks.md',
+      'specorbit/changes/bad-numbering/tasks.md',
       [
         '## 10. First release',
         '',
@@ -72,11 +72,11 @@ describe('openspec validate checks task numbering (#1520)', () => {
     );
 
     await write(
-      'openspec/changes/valid-numbering/specs/tasks/spec.md',
+      'specorbit/changes/valid-numbering/specs/tasks/spec.md',
       validDelta
     );
     await write(
-      'openspec/changes/valid-numbering/tasks.md',
+      'specorbit/changes/valid-numbering/tasks.md',
       [
         '# Tasks',
         '- [ ] an unnumbered task before any numbered group',
@@ -92,21 +92,21 @@ describe('openspec validate checks task numbering (#1520)', () => {
       ].join('\n')
     );
 
-    await write('openspec/schemas/glob-tasks/schema.yaml', globTasksSchema);
+    await write('specorbit/schemas/glob-tasks/schema.yaml', globTasksSchema);
     await write(
-      'openspec/changes/nested-numbering/.openspec.yaml',
+      'specorbit/changes/nested-numbering/.specorbit.yaml',
       'schema: glob-tasks\n'
     );
     await write(
-      'openspec/changes/nested-numbering/specs/tasks/spec.md',
+      'specorbit/changes/nested-numbering/specs/tasks/spec.md',
       validDelta
     );
     await write(
-      'openspec/changes/nested-numbering/backend/tasks.md',
+      'specorbit/changes/nested-numbering/backend/tasks.md',
       '## 2. Backend\n- [ ] 3.1 wrong group\n'
     );
     await write(
-      'openspec/changes/nested-numbering/frontend/tasks.md',
+      'specorbit/changes/nested-numbering/frontend/tasks.md',
       '## 4. Frontend\n- [ ] 4.1 correct group\n'
     );
   });
