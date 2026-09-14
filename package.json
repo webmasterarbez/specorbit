@@ -65,8 +65,8 @@
     "node": ">=20.19.0"
   },
   "devDependencies": {
-    "@changesets/changelog-github": "^1.0.0",
-    "@changesets/cli": "^3.0.1",
+    "@changesets/changelog-github": "^1.0.1",
+    "@changesets/cli": "^3.0.2",
     "@types/node": "^20.19.43",
     "@vitest/ui": "^3.2.6",
     "eslint": "^10.5.0",
